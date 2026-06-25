@@ -236,7 +236,6 @@ internal static class Inspection
     {
         try
         {
-            var t = Il2CppType.From(typeof(LogicalRope)).Assembly.GetType("Il2CppTheGameBakers.Cairn.RobotPawnController");
             foreach (var bo in UnityEngine.Object.FindObjectsOfType(Il2CppType.Of<Il2CppTheGameBakers.Cairn.RobotPawnController>(), true))
             {
                 var b = bo.Cast<Il2CppTheGameBakers.Cairn.RobotPawnController>();

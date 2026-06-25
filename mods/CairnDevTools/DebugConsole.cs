@@ -65,7 +65,7 @@ public sealed class DebugConsole
             log("console: no port available in 14200-14209");
             return false;
         }
-        new Thread(Serve) { IsBackground = true, Name = "CairnCoopConsole" }.Start();
+        new Thread(Serve) { IsBackground = true, Name = "CairnDevTools" }.Start();
         log($"console: live at http://127.0.0.1:{Port}/cmd?q=help");
         return true;
     }
@@ -95,7 +95,7 @@ public sealed class DebugConsole
             if (ctx.Request.HttpMethod == "POST")
             {
                 // POST body = code/argument payload (saves URL-encoding multi-line C#).
-                using var reader = new System.IO.StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding);
+                using var reader = new System.IO.StreamReader(ctx.Request.InputStream, System.Text.Encoding.UTF8);
                 string body = reader.ReadToEnd();
                 if (!string.IsNullOrWhiteSpace(body))
                     q = (ctx.Request.QueryString["q"] ?? "eval") + " " + body;

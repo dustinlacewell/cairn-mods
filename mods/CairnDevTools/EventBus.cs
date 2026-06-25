@@ -116,7 +116,7 @@ public static class EventBus
     public static bool TryWaitNext(long since, int timeoutMs, string name, out Event result)
     {
         result = default;
-        var deadline = Environment.TickCount + Math.Max(0, timeoutMs);
+        var deadline = Environment.TickCount64 + Math.Max(0, timeoutMs);
         lock (Gate)
         {
             while (true)
@@ -134,9 +134,9 @@ public static class EventBus
                     result = ev;
                     return true;
                 }
-                int remaining = deadline - Environment.TickCount;
+                long remaining = deadline - Environment.TickCount64;
                 if (remaining <= 0) return false;
-                Monitor.Wait(Gate, remaining);
+                Monitor.Wait(Gate, (int)Math.Min(remaining, int.MaxValue));
             }
         }
     }
