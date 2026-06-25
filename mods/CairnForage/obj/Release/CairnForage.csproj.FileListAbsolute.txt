@@ -1,0 +1,10 @@
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\CairnForage.csproj.AssemblyReference.cache
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\CairnForage.GeneratedMSBuildEditorConfig.editorconfig
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\CairnForage.AssemblyInfoInputs.cache
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\CairnForage.AssemblyInfo.cs
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\CairnForage.csproj.CoreCompileInputs.cache
+D:\code\ghidra\cairn-mp\mods\CairnForage\bin\Release\CairnForage.deps.json
+D:\code\ghidra\cairn-mp\mods\CairnForage\bin\Release\CairnForage.dll
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\CairnForage.dll
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\refint\CairnForage.dll
+D:\code\ghidra\cairn-mp\mods\CairnForage\obj\Release\ref\CairnForage.dll

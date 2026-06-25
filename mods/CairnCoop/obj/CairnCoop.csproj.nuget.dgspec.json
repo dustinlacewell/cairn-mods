@@ -1,0 +1,140 @@
+{
+  "format": 1,
+  "restore": {
+    "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCoop\\CairnCoop.csproj": {}
+  },
+  "projects": {
+    "D:\\code\\ghidra\\cairn-mp\\mods\\CairnAPI\\CairnAPI.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnAPI\\CairnAPI.csproj",
+        "projectName": "CairnAPI",
+        "projectPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnAPI\\CairnAPI.csproj",
+        "packagesPath": "C:\\Users\\dustin\\.nuget\\packages\\",
+        "outputPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnAPI\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\dustin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCoop\\CairnCoop.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCoop\\CairnCoop.csproj",
+        "projectName": "CairnCoop",
+        "projectPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCoop\\CairnCoop.csproj",
+        "packagesPath": "C:\\Users\\dustin\\.nuget\\packages\\",
+        "outputPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCoop\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\dustin\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "D:\\code\\ghidra\\cairn-mp\\mods\\CairnAPI\\CairnAPI.csproj": {
+                "projectPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnAPI\\CairnAPI.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

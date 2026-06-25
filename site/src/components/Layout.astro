@@ -1,0 +1,89 @@
+---
+import "../styles/theme.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  active?: "home" | "mods" | "install" | "developers";
+}
+const { title, description, active } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const href = (p: string) => `${base}${p}` || "/";
+
+const links: { id: Props["active"]; label: string; path: string }[] = [
+  { id: "mods", label: "mods", path: "/mods/" },
+  { id: "install", label: "install", path: "/install/" },
+  { id: "developers", label: "dev", path: "/developers/" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href={href("/")}>
+          <span class="logo-wrap">
+            <img src={`${base}/cairn-logo.png`} alt="" class="logo" />
+          </span>
+          cairn modding
+        </a>
+        <span class="spacer"></span>
+        {
+          links.map((l) => (
+            <a href={href(l.path)} aria-current={active === l.id ? "page" : undefined}>
+              {l.label}
+            </a>
+          ))
+        }
+        <a href="https://discord.gg/4kWwfu9crB" class="discord" target="_blank" rel="noopener">discord</a>
+      </div>
+    </nav>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        Mods for Cairn · MelonLoader · not affiliated with The Game Bakers
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .logo-wrap {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    outline: 1.5px solid white;
+  }
+  .logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scale(1.8);
+    transform-origin: center;
+  }
+</style>

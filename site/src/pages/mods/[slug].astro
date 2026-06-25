@@ -1,0 +1,501 @@
+---
+import Layout from "../../components/Layout.astro";
+import { mods, mod as findMod, kindLabel } from "../../data/mods";
+import type { DocSection } from "../../data/mods";
+import { codeToHtml } from "shiki";
+
+export function getStaticPaths() {
+  return mods.map((m) => ({ params: { slug: m.slug } }));
+}
+
+const { slug } = Astro.params;
+const m = findMod(slug!)!;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const deps = (m.requires ?? []).map((s) => findMod(s)).filter(Boolean);
+const pending = m.download?.startsWith("#");
+const hasDocs = m.sections && m.sections.length > 0;
+
+const highlightedCode = new Map<string, string>();
+if (hasDocs) {
+  for (const s of m.sections!) {
+    if (s.code) {
+      highlightedCode.set(
+        s.id,
+        await codeToHtml(s.code.src.trim(), {
+          lang: s.code.lang,
+          theme: "tokyo-night",
+        })
+      );
+    }
+  }
+}
+
+type TocEntry = { section: DocSection; children: DocSection[] };
+const tocEntries: TocEntry[] = [];
+if (hasDocs) {
+  for (const s of m.sections!) {
+    if (s.group) continue;
+    tocEntries.push({ section: s, children: [] });
+  }
+  for (const s of m.sections!) {
+    if (!s.group) continue;
+    const parent = tocEntries.find((e) => e.section.id === s.group);
+    if (parent) parent.children.push(s);
+  }
+}
+---
+
+<Layout title={`${m.name} — Cairn mods`} description={m.tagline} active="mods">
+  <div class={`wrap page${hasDocs ? " has-toc" : ""}`}>
+    <article class="content">
+      <a href={`${base}/mods/`} class="dim back">← Mods</a>
+
+      <div id="overview" class="head">
+        <h1 class="mono">{m.name}</h1>
+        {m.kind !== "player" && <span class={`kind ${m.kind}`}>{kindLabel[m.kind]}</span>}
+      </div>
+      <p class="meta dim mono">v{m.version} · {m.author}</p>
+      <p class="tagline">{m.tagline}</p>
+
+      {m.description.map((p) => <p class="desc dim" set:html={p} />)}
+
+      <div class="block">
+        <p class="label">Features</p>
+        <ul class="list">
+          {m.features.map((f) => <li>{f}</li>)}
+        </ul>
+      </div>
+
+      {m.bindings && m.bindings.length > 0 && (
+        <div class="block">
+          <p class="label">Keys</p>
+          <ul class="keys">
+            {m.bindings.map((b) => (
+              <li>
+                <kbd>{b.key}</kbd> <span class="dim">{b.does}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div class="block">
+        <p class="label">Requires</p>
+        {deps.length > 0 ? (
+          <ul class="list">
+            {deps.map((d) => (
+              <li>
+                <a href={`${base}/mods/${d!.slug}/`}>{d!.name}</a>{" "}
+                <span class="dim">— bundle it alongside</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="dim">MelonLoader only.</p>
+        )}
+      </div>
+
+      <div class="get">
+        {pending ? (
+          <span class="dim"><span class="amber">Download</span> — not released yet</span>
+        ) : (
+          <a href={m.download}>Download .dll</a>
+        )}
+        <span class="faint"> · </span>
+        <a href={`${base}/install/`}>Install guide</a>
+      </div>
+
+      {hasDocs && (
+        <div class="doc-sections">
+          <hr />
+          {m.sections!.map((s) => (
+            <section class="doc-section" id={s.id}>
+              <h2>{s.title}</h2>
+
+              {s.intro && <p class="section-intro" set:html={s.intro} />}
+
+              {s.body && s.body.map((p) => <p class="section-body" set:html={p} />)}
+
+              {s.entries && s.entries.length > 0 && (
+                <div class="entries">
+                  {s.entries.map((e) => (
+                    <div class="entry">
+                      <div class="entry-head">
+                        <code class="entry-sig">{e.signature}</code>
+                        {e.returns && (
+                          <span class="entry-returns">
+                            <span class="arrow">→</span>
+                            <code class="ret-type">{e.returns}</code>
+                          </span>
+                        )}
+                      </div>
+                      <p class="entry-desc">{e.description}</p>
+                      {e.params && e.params.length > 0 && (
+                        <table class="param-table">
+                          <tbody>
+                            {e.params.map((p) => (
+                              <tr>
+                                <td class="param-name">
+                                  <code>{p.name}</code>
+                                  {p.optional && <span class="optional">opt</span>}
+                                </td>
+                                <td class="param-type"><code>{p.type}</code></td>
+                                <td class="param-desc">{p.description}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {s.code && (
+                <div class="code-block">
+                  <div class="code-label">Example</div>
+                  <Fragment set:html={highlightedCode.get(s.id) ?? ""} />
+                </div>
+              )}
+            </section>
+          ))}
+        </div>
+      )}
+    </article>
+
+    {hasDocs && (
+      <nav class="toc">
+        <p class="toc-label">Contents</p>
+        <ul>
+          <li><a href="#overview" data-toc="overview">Overview</a></li>
+          {tocEntries.map(({ section: s, children }) => (
+            <li>
+              <a href={`#${s.id}`} data-toc={s.id}>{s.title}</a>
+              {children.length > 0 && (
+                <ul>
+                  {children.map((c) => (
+                    <li><a href={`#${c.id}`} data-toc={c.id}>{c.title}</a></li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </div>
+</Layout>
+
+{hasDocs && (
+  <script>
+    const anchors = [...document.querySelectorAll<HTMLElement>(".doc-section, #overview")];
+    const links = document.querySelectorAll<HTMLAnchorElement>("[data-toc]");
+
+    function activate(id: string) {
+      links.forEach((a) => a.classList.toggle("active", a.dataset.toc === id));
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) activate(visible[0].target.id);
+      },
+      { rootMargin: "-10% 0px -80% 0px", threshold: 0 }
+    );
+
+    anchors.forEach((el) => observer.observe(el));
+  </script>
+)}
+
+<style>
+  .page {
+    padding-top: 2.5rem;
+  }
+  .has-toc {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    align-items: start;
+    justify-items: stretch;
+  }
+
+  .content {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* TOC */
+  .toc {
+    position: sticky;
+    top: 1.5rem;
+    font-size: 13px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .toc-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.6rem;
+    width: 100%;
+    text-align: center;
+  }
+  .toc ul {
+    list-style: none;
+    display: grid;
+    gap: 0.1rem;
+  }
+  .toc > ul > li {
+    margin-top: 0.1rem;
+  }
+  .toc ul ul {
+    padding-left: 0.75rem;
+    margin-top: 0.1rem;
+  }
+  .toc a {
+    color: var(--dim);
+    display: block;
+    padding: 0.2rem 0;
+    line-height: 1.4;
+  }
+  .toc a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .toc a.active {
+    color: var(--accent);
+  }
+
+  /* Page header */
+  .back {
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    font-size: 13px;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  h1 {
+    font-size: 1.35rem;
+  }
+  .meta {
+    font-size: 12px;
+    margin: 0.25rem 0 0.85rem;
+  }
+  .tagline {
+    color: var(--text);
+    margin-bottom: 0.85rem;
+  }
+  .desc {
+    margin-bottom: 0.6rem;
+    max-width: 62ch;
+  }
+  .block {
+    margin-top: 1.75rem;
+  }
+  .label {
+    margin-bottom: 0.5rem;
+  }
+  .list,
+  .keys {
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+  }
+  .list li {
+    padding-left: 1.1rem;
+    position: relative;
+  }
+  .list li::before {
+    content: "–";
+    position: absolute;
+    left: 0;
+    color: var(--faint);
+  }
+  .keys li {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+  }
+  .get {
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    font-size: 13px;
+  }
+
+  /* Doc sections */
+  .doc-sections {
+    margin-top: 0.5rem;
+  }
+  .doc-section {
+    margin-top: 2.5rem;
+    scroll-margin-top: 1.5rem;
+  }
+  .doc-section h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-intro,
+  .section-body {
+    color: var(--dim);
+    font-size: 13px;
+    margin-bottom: 1rem;
+    max-width: 66ch;
+  }
+
+  /* Entry list */
+  .entries {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+  }
+  .entry {
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .entry:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  /* Signature line */
+  .entry-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.3rem;
+  }
+  .entry-sig {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .entry-returns {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+  }
+  .arrow {
+    color: var(--faint);
+    font-size: 12px;
+  }
+  .ret-type {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--green);
+  }
+
+  /* Description */
+  .entry-desc {
+    font-size: 13px;
+    color: var(--dim);
+    max-width: 64ch;
+    line-height: 1.5;
+  }
+
+  /* Param table */
+  .param-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.6rem;
+    font-size: 12px;
+  }
+  .param-table tr + tr td {
+    border-top: 1px solid var(--border);
+  }
+  .param-name {
+    padding: 0.3rem 0.75rem 0.3rem 0;
+    white-space: nowrap;
+    vertical-align: top;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .param-name code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+  .optional {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 12%, transparent);
+    padding: 0.1em 0.45em;
+    border-radius: 3px;
+    line-height: 1;
+  }
+  .param-type {
+    padding: 0.3rem 1.25rem 0.3rem 0;
+    white-space: nowrap;
+    vertical-align: top;
+  }
+  .param-type code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--green);
+  }
+  .param-desc {
+    padding: 0.3rem 0;
+    color: var(--dim);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  /* Code block */
+  .code-block {
+    margin-top: 1.25rem;
+  }
+  .code-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.4rem;
+  }
+  .code-block :global(pre) {
+    background: var(--surface) !important;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+  .code-block :global(code) {
+    font-family: var(--font-mono);
+    font-size: inherit;
+  }
+
+  @media (max-width: 700px) {
+    .has-toc {
+      grid-template-columns: 1fr;
+    }
+    .toc {
+      position: static;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+      margin-bottom: 0.5rem;
+      order: -1;
+    }
+  }
+</style>

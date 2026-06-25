@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>none</DebugType>
+    <!-- Copy NuGet (Roslyn) assemblies into the build output so the install target can
+         stage them into the game's UserLibs. -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Live eval for the debug console: compiles C# against the running game.
+         4.4.0 deliberately: its System.Collections.Immutable dependency (6.x) loads on
+         MelonLoader's .NET 6 runtime; 4.9.x pulls SCI 8.0 which does not. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MelonLoader">
+      <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)\MelonLoader\net6\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppSystem">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Global">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Global.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Utilities.SingletonBase">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Utilities.SingletonBase.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppObi">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppObi.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Skip install (e.g. while game instances hold the dll lock): dotnet build -p:NoInstall=1 -->
+  <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" />
+    <!-- Roslyn (live eval) and its deps go to UserLibs, where MelonLoader resolves mod deps. -->
+    <ItemGroup>
+      <EvalDeps Include="$(TargetDir)*.dll" Exclude="$(TargetPath)" />
+    </ItemGroup>
+    <Copy SourceFiles="@(EvalDeps)" DestinationFolder="$(GameDir)\UserLibs" />
+  </Target>
+
+</Project>

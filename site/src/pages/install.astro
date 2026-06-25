@@ -1,0 +1,118 @@
+---
+import Layout from "../components/Layout.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<Layout title="Install — Cairn mods" description="Install MelonLoader and add Cairn mods." active="install">
+  <section class="wrap page">
+    <h1>Install</h1>
+    <p class="dim intro">
+      Mods load through <a href="https://melonloader.net" rel="noopener">MelonLoader</a>. Install it
+      into Cairn once, then each mod is one <code>.dll</code> in the <code>Mods\</code> folder.
+    </p>
+
+    <p class="warn">Close Cairn before adding or updating mods — it holds each mod file open while running.</p>
+
+    <p class="label step">1 · Locate the game folder</p>
+    <p>Steam → right-click <strong>Cairn</strong> → Manage → Browse local files. The folder with <code>Cairn.exe</code>:</p>
+    <pre class="box">C:\Program Files (x86)\Steam\steamapps\common\Cairn\</pre>
+
+    <p class="label step">2 · Install MelonLoader</p>
+    <ol class="steps">
+      <li>Get <code>MelonLoader.Installer.exe</code> from <a href="https://github.com/LavaGang/MelonLoader/releases" rel="noopener">MelonLoader releases</a>.</li>
+      <li>Run it; point Select at <code>Cairn.exe</code>.</li>
+      <li>Latest stable → Install. Patches in place.</li>
+    </ol>
+
+    <p class="label step">3 · Launch once</p>
+    <p>Run Cairn from Steam. MelonLoader generates its folders on first boot — then quit. Layout:</p>
+    <pre class="box">Cairn\
+├─ Cairn.exe
+├─ version.dll      (MelonLoader hook)
+├─ MelonLoader\     (loader + logs)
+├─ Mods\            (drop .dll files here)
+└─ UserLibs\        (shared libs, if a mod needs one)</pre>
+
+    <p class="label step">4 · Add a mod</p>
+    <ol class="steps">
+      <li>Download a mod's <code>.dll</code> from its page (e.g. <a href={`${base}/mods/cairnroutes/`}>CairnRoutes</a>).</li>
+      <li>Make sure Cairn is closed.</li>
+      <li>Copy the <code>.dll</code> into <code>Mods\</code>.</li>
+      <li>If the mod lists a <strong>Requires</strong> library (e.g. <a href={`${base}/mods/cairnapi/`}>CairnAPI</a>), drop that into <code>Mods\</code> too.</li>
+      <li>Launch. It loads at startup — check the mod's keys (<kbd>F8</kbd> routes, <kbd>F6</kbd> beats, <kbd>F9</kbd> tools, <kbd>F4</kbd> co-op).</li>
+    </ol>
+
+    <p class="label step">Verify</p>
+    <p class="dim">
+      <code>MelonLoader\Latest.log</code> lists each mod by name and version as it loads.
+    </p>
+
+    <p class="label step">Trouble</p>
+    <dl class="faq">
+      <dt>No mods load</dt>
+      <dd>The <code>.dll</code> must be directly in <code>Mods\</code>, and <code>version.dll</code> must sit next to <code>Cairn.exe</code>. Re-run the installer if not.</dd>
+      <dt>Missing dependency</dt>
+      <dd>Add the library named in the mod's <strong>Requires</strong> box to <code>Mods\</code>.</dd>
+      <dt>Copy fails — file in use</dt>
+      <dd>Cairn is still running. Quit fully (both windows in co-op), then copy.</dd>
+      <dt>Remove a mod</dt>
+      <dd>Close Cairn, delete its <code>.dll</code>.</dd>
+      <dt>Uninstall everything</dt>
+      <dd>Installer → Un-Install, or Steam → Verify integrity of game files.</dd>
+    </dl>
+  </section>
+</Layout>
+
+<style>
+  .page {
+    padding-top: 2.5rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+  }
+  .intro {
+    margin-bottom: 1.25rem;
+    max-width: 64ch;
+  }
+  .warn {
+    border-left: 2px solid var(--amber);
+    padding: 0.35rem 0 0.35rem 0.75rem;
+    color: var(--amber);
+    font-size: 13px;
+    margin-bottom: 2rem;
+  }
+  .step {
+    margin: 2rem 0 0.6rem;
+  }
+  .page p {
+    margin-bottom: 0.6rem;
+  }
+  .box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 0.4rem 0 0.5rem;
+    color: var(--text);
+  }
+  ol.steps {
+    margin: 0.3rem 0 0.5rem 1.4rem;
+    display: grid;
+    gap: 0.35rem;
+  }
+  .faq dt {
+    font-weight: 600;
+    margin-top: 0.9rem;
+    color: var(--text);
+  }
+  .faq dd {
+    color: var(--dim);
+    margin-left: 0;
+  }
+</style>

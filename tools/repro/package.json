@@ -1,0 +1,30 @@
+{
+  "name": "@cairn-mp/repro",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Autonomous local co-op edelweiss-fall flight-recorder: launches two Cairn instances, links the rope, force-exhausts both climbers, waits for the game's own edelweiss prompt, and captures + diffs full host-vs-joiner state at the prompt and after the revive resolves.",
+  "bin": { "repro": "src/cli.ts" },
+  "scripts": {
+    "repro": "tsx src/cli.ts",
+    "wait-event": "tsx src/wait-event.ts",
+    "setup-idle": "tsx src/setup-idle.ts",
+    "setup-n": "tsx src/setup-n.ts",
+    "setup-n2": "tsx src/setup-n2.ts",
+    "chain3": "tsx src/chain3.ts",
+    "failover-test": "tsx src/failover-test.ts",
+    "chain-heal-test": "tsx src/chain-heal-test.ts",
+    "chain4": "tsx src/chain4.ts",
+    "unrope-test": "tsx src/unrope-test.ts",
+    "party-test": "tsx src/party-test.ts",
+    "kick-test": "tsx src/kick-test.ts",
+    "failover4-test": "tsx src/failover4-test.ts",
+    "jitter-hunt": "tsx src/jitter-hunt.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0"
+  }
+}

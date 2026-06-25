@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <DebugType>none</DebugType>
+    <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Archipelago.MultiClient.Net" Version="6.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MelonLoader">
+      <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)\MelonLoader\net6\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Global">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Global.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Utilities.SingletonBase">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Utilities.SingletonBase.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.StringId.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.StringId.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.StringId.Generated.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.StringId.Generated.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Install: mod dll into Mods, managed dependencies into UserLibs. -->
+  <Target Name="InstallToGame" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" />
+    <Copy SourceFiles="$(OutputPath)Archipelago.MultiClient.Net.dll;$(OutputPath)Newtonsoft.Json.dll"
+          DestinationFolder="$(GameDir)\UserLibs" />
+  </Target>
+
+</Project>

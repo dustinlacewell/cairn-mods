@@ -1,0 +1,120 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugType>none</DebugType>
+    <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The shared mod base: CairnAPI.Ui (the uGUI design-system layer) + game-access helpers. Compile-time
+         reference only — CairnAPI.dll is its own MelonLoader mod, already loaded, so we never copy it. -->
+    <ProjectReference Include="..\CairnAPI\CairnAPI.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+    <Reference Include="CrossMenuLib">
+      <HintPath>$(GameDir)\Mods\CrossMenuLib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="MelonLoader">
+      <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)\MelonLoader\net6\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppSystem">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Global">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Global.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Tweakables">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Tweakables.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.Tweakables.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Tweakables.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.StringId.Generated.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.StringId.Generated.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- LocKeyStringId (the type attachRopeLockey/detachRopeLockey resolve to + the ParametrizedLocKey ctor
+         param) lives here, even though ParametrizedLocKey itself is in Cairn.Global. Needed for the gesture
+         prompt labels. -->
+    <Reference Include="Il2CppTheGameBakers.TGBTools.Localization.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Localization.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Utilities.SingletonBase">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Utilities.SingletonBase.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Cinemachine">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.Cinemachine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- uGUI for the rope-request HUD (Canvas/Image/Text/layout groups). UI is the design-system layer;
+         UIModule holds RectTransform/CanvasScaler; TextRenderingModule holds Font + builtin Arial. -->
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppObi">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppObi.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Skip install (e.g. while game instances hold the dll lock): dotnet build -p:NoInstall=1 -->
+  <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" />
+  </Target>
+
+</Project>

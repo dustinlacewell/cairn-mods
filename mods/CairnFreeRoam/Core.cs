@@ -1,0 +1,96 @@
+using HarmonyLib;
+using MelonLoader;
+using UnityEngine.InputSystem;
+using TGB = Il2CppTheGameBakers.Cairn;
+
+[assembly: MelonInfo(typeof(CairnFreeRoam.Core), "CairnFreeRoam", "0.1.0", "ldlework")]
+[assembly: MelonGame("TheGameBakers", "Cairn")]
+
+namespace CairnFreeRoam;
+
+// Unlock the game's own eagle-eye fast-travel ("Free Roam teleport") in ANY save — campaign, free-solo,
+// anything — without being on a Free Roam difficulty.
+//
+// The entire fast-travel feature (the warp list, world pins, eagle-eye camera POV, and the warp itself) is
+// shipped and fully functional; it is gated behind exactly one flag, GameSetup.CanWarp
+// (GamemodeConstraints.CanWarp = 1024). That flag is checked in ONE place that matters —
+// EagleEyeUI.ToggleFreeRoamTeleport_OnInputDetected refuses to open the view unless CanWarp — and NOWHERE on
+// the warp execution path (adversarially verified; see re/systems/world-streaming/freeroam-discovery-and-canwarp.md
+// and freeroam-warp.md). So forcing get_CanWarp → true is the whole unlock: the existing input handler then
+// opens the eagle-eye view and the player fast-travels to the warp points the game has registered.
+//
+// We do NOT mutate the difficulty's constraint asset (a shared ScriptableObject); we postfix the getter, which
+// is a pure UI unlock — reversible via the preference toggle, no game data touched.
+//
+// A second patch (RevealPinsPatch) forces FreeRoamWarpPoint.IsKnown → true so EVERY warp point shows as a
+// reachable destination, not just the bivouacs you've already rested at — again a pure selection unlock, no
+// save state touched.
+public class Core : MelonMod
+{
+    internal static MelonPreferences_Entry<bool> Enabled;
+    internal static MelonPreferences_Entry<bool> RevealAllPins;
+    internal static MelonPreferences_Entry<Key> AddBookmarkKey;
+    internal static MelonPreferences_Entry<Key> DeleteBookmarkKey;
+    internal static MelonPreferences_Entry<Key> RenameBookmarkKey;
+
+    private BookmarkStore _store;
+    private BookmarkController _bookmarks;
+    private bool _registered;
+
+    public override void OnInitializeMelon()
+    {
+        var cat = MelonPreferences.CreateCategory("CairnFreeRoam");
+        Enabled = cat.CreateEntry("Enabled", true,
+            description: "Unlock the eagle-eye fast-travel teleport in any save.");
+        RevealAllPins = cat.CreateEntry("RevealAllPins", true,
+            description: "Treat every warp point as discovered (reveals bivouacs you haven't rested at yet).");
+        AddBookmarkKey = cat.CreateEntry("AddBookmarkKey", Key.B,
+            description: "In the eagle-eye view, bookmark the current position as a new warp point.");
+        DeleteBookmarkKey = cat.CreateEntry("DeleteBookmarkKey", Key.Delete,
+            description: "In the eagle-eye view, delete the selected custom bookmark.");
+        RenameBookmarkKey = cat.CreateEntry("RenameBookmarkKey", Key.R,
+            description: "In the eagle-eye view, rename the selected custom bookmark (Enter confirms, Esc cancels).");
+
+        _store = new BookmarkStore();
+        _bookmarks = new BookmarkController(_store);
+        LoggerInstance.Msg($"CairnFreeRoam loaded — eagle-eye unlocked, {_store.Bookmarks.Count} bookmark(s).");
+    }
+
+    public override void OnUpdate()
+    {
+        // Bookmarks are FreeRoamWarpPoints that a scene unload destroys; re-register them once the pawn is in
+        // and a FreeRoamManager exists, and drop the flag when gameplay tears down so we re-register next load.
+        bool inGame = Il2Cpp.PawnManager.MCSpawned
+                      && Il2Cpp.MoSingleton<TGB.FreeRoamManager>.Instance != null;
+        if (inGame && !_registered) { _store.RegisterAll(); _registered = true; }
+        else if (!inGame && _registered) { _registered = false; _bookmarks.Teardown(); }
+
+        if (inGame) _bookmarks.Tick(AddBookmarkKey.Value, DeleteBookmarkKey.Value, RenameBookmarkKey.Value);
+    }
+}
+
+// Force GameSetup.CanWarp true so EagleEyeUI opens its fast-travel view regardless of difficulty.
+[HarmonyPatch(typeof(TGB.GameSetup), nameof(TGB.GameSetup.CanWarp), MethodType.Getter)]
+internal static class CanWarpPatch
+{
+    private static void Postfix(ref bool __result)
+    {
+        if (Core.Enabled != null && Core.Enabled.Value)
+            __result = true;
+    }
+}
+
+// Reveal every warp point. Vanilla, a bivouac point is "known" only after you've rested at it
+// (FreeRoamWarpPoint.IsKnown → InteractionProvidersManager.GetInteractionCount(bivouac) > 0); the eagle-eye
+// list greys out, skips, and refuses to warp to unknown points. Forcing IsKnown → true surfaces all of them
+// as selectable destinations. Pure UI/selection unlock — no save state touched, so no bivouac counts are
+// mutated and nothing persists; reversible via the RevealAllPins toggle.
+[HarmonyPatch(typeof(TGB.FreeRoamWarpPoint), nameof(TGB.FreeRoamWarpPoint.IsKnown))]
+internal static class RevealPinsPatch
+{
+    private static void Postfix(ref bool __result)
+    {
+        if (Core.RevealAllPins != null && Core.RevealAllPins.Value)
+            __result = true;
+    }
+}

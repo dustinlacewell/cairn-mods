@@ -1,0 +1,10 @@
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\CrossMenuLib.csproj.AssemblyReference.cache
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\CrossMenuLib.GeneratedMSBuildEditorConfig.editorconfig
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\CrossMenuLib.AssemblyInfoInputs.cache
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\CrossMenuLib.AssemblyInfo.cs
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\CrossMenuLib.csproj.CoreCompileInputs.cache
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\bin\Release\CrossMenuLib.deps.json
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\bin\Release\CrossMenuLib.dll
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\CrossMenuLib.dll
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\refint\CrossMenuLib.dll
+D:\code\ghidra\cairn-mp\mods\CrossMenuLib\obj\Release\ref\CrossMenuLib.dll

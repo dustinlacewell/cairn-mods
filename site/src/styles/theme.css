@@ -1,0 +1,158 @@
+/* Compact, information-first styling for the Cairn mods index.
+   Dark and restrained; mono reserved for code, keys, versions, and mod names. */
+
+:root {
+  --bg: #0c0d10;
+  --surface: #131419;
+  --surface-2: #181a21;
+  --border: #23252e;
+  --accent: #7aa2f7;
+  --green: #9ece6a;
+  --amber: #e0af68;
+  --text: #c5cad6;
+  --dim: #8088a0;
+  --faint: #5a6075;
+  --red: #f7768e;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, monospace;
+
+  --maxw: 800px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+code,
+kbd,
+.mono {
+  font-family: var(--font-mono);
+}
+code {
+  font-size: 0.9em;
+  color: var(--text);
+}
+kbd {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 0.4em;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.dim {
+  color: var(--dim);
+}
+.faint {
+  color: var(--faint);
+}
+.green {
+  color: var(--green);
+}
+.amber {
+  color: var(--amber);
+}
+
+/* section labels — small, uppercase, unobtrusive */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ── nav ───────────────────────────────────────── */
+.nav {
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  height: 46px;
+  font-size: 13px;
+}
+.nav a {
+  color: var(--dim);
+}
+.nav a.brand {
+  color: var(--text);
+  font-weight: 600;
+}
+.nav a:hover,
+.nav a[aria-current="page"] {
+  color: var(--text);
+  text-decoration: none;
+}
+.nav .spacer {
+  margin-left: auto;
+}
+
+/* ── kind marker (only lib / dev; player mods get none) ── */
+.kind {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.05em 0.4em;
+  border-radius: 3px;
+}
+.kind.library {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+}
+.kind.dev {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+  padding: 1.5rem 0;
+  color: var(--faint);
+  font-size: 12px;
+}

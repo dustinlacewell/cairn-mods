@@ -1,0 +1,10 @@
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\CairnFreeRoam.csproj.AssemblyReference.cache
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\CairnFreeRoam.GeneratedMSBuildEditorConfig.editorconfig
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\CairnFreeRoam.AssemblyInfoInputs.cache
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\CairnFreeRoam.AssemblyInfo.cs
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\CairnFreeRoam.csproj.CoreCompileInputs.cache
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\bin\Release\CairnFreeRoam.deps.json
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\bin\Release\CairnFreeRoam.dll
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\CairnFreeRoam.dll
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\refint\CairnFreeRoam.dll
+d:\code\ghidra\cairn-mp\mods\CairnFreeRoam\obj\Release\ref\CairnFreeRoam.dll

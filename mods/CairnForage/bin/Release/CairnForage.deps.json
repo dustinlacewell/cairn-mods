@@ -1,0 +1,26 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "CairnForage/1.0.0": {
+        "dependencies": {
+          "CairnAPI": "1.0.0"
+        },
+        "runtime": {
+          "CairnForage.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CairnForage/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

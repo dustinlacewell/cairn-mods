@@ -1,0 +1,13 @@
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArchipelago.csproj.AssemblyReference.cache
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArchipelago.GeneratedMSBuildEditorConfig.editorconfig
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArchipelago.AssemblyInfoInputs.cache
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArchipelago.AssemblyInfo.cs
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArchipelago.csproj.CoreCompileInputs.cache
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\bin\Release\CairnArchipelago.deps.json
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\bin\Release\CairnArchipelago.dll
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\bin\Release\Archipelago.MultiClient.Net.dll
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\bin\Release\Newtonsoft.Json.dll
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArc.DDB46BDA.Up2Date
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\CairnArchipelago.dll
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\refint\CairnArchipelago.dll
+D:\code\ghidra\cairn-mp\mods\CairnArchipelago\obj\Release\ref\CairnArchipelago.dll

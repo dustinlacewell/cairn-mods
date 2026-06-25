@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <DebugType>none</DebugType>
+    <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CairnAPI\CairnAPI.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MelonLoader">
+      <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Global">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Global.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Utilities.SingletonBase">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Utilities.SingletonBase.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Splines">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.Splines.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Mathematics">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.Mathematics.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.Cairn.Tweakables">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Tweakables.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" />
+  </Target>
+
+</Project>

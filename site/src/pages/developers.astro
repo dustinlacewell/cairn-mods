@@ -1,0 +1,150 @@
+---
+import Layout from "../components/Layout.astro";
+import { mods, kindLabel } from "../data/mods";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const libs = mods.filter((m) => m.kind !== "player");
+---
+
+<Layout title="Developers — Cairn mods" description="How these Cairn mods are built." active="developers">
+  <section class="wrap page">
+    <h1>Developers</h1>
+    <p class="dim intro">
+      Cairn is a Unity <strong>IL2CPP</strong> game. Mods are .NET assemblies: MelonLoader loads
+      them, Il2CppInterop exposes the game types, Harmony patches them.
+    </p>
+
+    <p class="label">Stack</p>
+    <ul class="list">
+      <li><strong>MelonLoader</strong> — loads mod assemblies, lifecycle hooks</li>
+      <li><strong>Il2CppInterop</strong> — managed proxies; call <code>Il2Cpp.&lt;Type&gt;</code></li>
+      <li><strong>Harmony</strong> — prefix / postfix the game's own methods</li>
+    </ul>
+
+    <p class="label sec">Build on the libraries</p>
+    <div class="listing">
+      {
+        libs.map((m) => (
+          <a class="row" href={`${base}/mods/${m.slug}/`}>
+            <span class="name mono">{m.name}</span>
+            <span class={`kind ${m.kind}`}>{kindLabel[m.kind]}</span>
+            <span class="dim desc">{m.tagline}</span>
+          </a>
+        ))
+      }
+    </div>
+    <p class="dim small">
+      The cross-menu toolkit (formerly <code>CrossMenuLib</code>) is folding into
+      <a href={`${base}/mods/cairnapi/`}>CairnAPI</a> — target that.
+    </p>
+
+    <p class="label sec">Minimal mod</p>
+    <pre class="code"><code>{`using MelonLoader;
+
+[assembly: MelonInfo(typeof(MyMod.Core), "MyMod", "0.1.0", "you")]
+[assembly: MelonGame("The Game Bakers", "Cairn")]
+
+namespace MyMod;
+
+public class Core : MelonMod
+{
+    public override void OnInitializeMelon() => LoggerInstance.Msg("loaded");
+    public override void OnUpdate() { /* per-frame */ }
+}`}</code></pre>
+    <p class="dim small">
+      Build against <code>MelonLoader\Il2CppAssemblies\</code> (generated on first run), reference
+      <code>MelonLoader.dll</code>, drop the <code>.dll</code> in <code>Mods\</code>.
+    </p>
+
+    <p class="label sec">Live iteration</p>
+    <p class="dim">
+      <a href={`${base}/mods/cairndevtools/`}>CairnDevTools</a> runs an HTTP console that evals C#
+      against the live game — probe state without a rebuild.
+    </p>
+  </section>
+</Layout>
+
+<style>
+  .page {
+    padding-top: 2.5rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+  }
+  .intro {
+    margin-bottom: 1.75rem;
+    max-width: 64ch;
+  }
+  .label {
+    margin-bottom: 0.6rem;
+  }
+  .sec {
+    margin-top: 2rem;
+  }
+  .list {
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+  }
+  .list li {
+    padding-left: 1.1rem;
+    position: relative;
+  }
+  .list li::before {
+    content: "–";
+    position: absolute;
+    left: 0;
+    color: var(--faint);
+  }
+  .listing {
+    margin-bottom: 0.5rem;
+  }
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    color: var(--text);
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .row:last-child {
+    border-bottom: none;
+  }
+  .row:hover {
+    text-decoration: none;
+    background: var(--surface);
+  }
+  .name {
+    color: var(--text);
+    font-size: 13px;
+    min-width: 10rem;
+    flex-shrink: 0;
+  }
+  .row:hover .name {
+    color: var(--accent);
+  }
+  .desc {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .small {
+    font-size: 12.5px;
+    margin-top: 0.5rem;
+  }
+  .code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.85rem 1rem;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin: 0.4rem 0 0.5rem;
+    color: var(--text);
+  }
+</style>

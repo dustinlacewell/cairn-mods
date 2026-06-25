@@ -1,0 +1,203 @@
+﻿Archipelago Version 0.6.8  -  Seed: 1
+
+Filling Algorithm:               balanced
+Players:                         1
+Plando Options:                  connections, texts, bosses
+Game:                            Cairn
+Location Count:                  146
+Progression Balancing:           50
+Accessibility:                   Full
+Local Items:                     
+Non-local Items:                 
+Start Inventory:                 
+Start Hints:                     
+Start Location Hints:            
+Excluded Locations:              
+Priority Locations:              
+Item Links:                      
+Plando Items:                    
+Death Link:                      No
+Start Inventory from Pool:       
+
+
+Locations:
+
+01010 Intro: Tea Herbal
+01010 NukeTent: Progressive Altitude Permit
+02010 FirstLanding: Charm Pika Doll
+02010 TitleSeq: Alpine Cola
+11010 FirstMessage: Quinoa Cooked
+11050 FirstEncounterBrokenClimbot: Thermos
+12010 Skeleton: Barometer
+13010 FirstDoor: Alc Bloody Mary
+14010 Naomi2: Progressive Altitude Permit
+14010 Naomi2Higher: Progressive Altitude Permit
+14010 Naomi2_1: Plantain Milk
+14011 Naomi2FallbackMessage: Flask
+15010 CableCarTop: Tea Milk
+15010 CableCarTopEnd: Noodles Sweet
+15010 CableCarTopInteraction: Sp Troglodyte Trout
+15010 CableCar_Top: Rice
+21010 WaterfallFallback: Tea
+21010 Waterfall_Seq: Sp Alpine Rice
+24010 MarcoFirstEncounter: Climbing Tape
+24010 MarcoFirstEncounterEndGhost: Dandelion Cooked
+24010 MarcoFirstEncounter_Left: Charm Crystal
+24010 MarcoFirstEncounter_Right: Adrenaline
+24050 biv_NaomiAlwaysAMountain: Statuette
+26005 Shepherdess: Thistle Cooked
+26005 ShepherdessFallback: Bottle Medium
+26005 ShepherdessFallbackCabin: Thistle
+26020 FirstGuardian: Recipe Sp Noodles
+26020 FirstGuardian1: Coffee Sweet
+26020 FirstGuardian2: Flyer Chalk
+26025 ShepherdessEnd: Quinoa Sweet
+34005 MountainLakeBuffer: Oat Flakes Flambeed
+34007 MountainLakeWalk_OTS: Frog
+34010 MountainLakeSeq: Pretzel
+34030 MarcoTriesToSing: Puff Storage
+34031 Intro_FollowMCOrder: Trout Herbal
+34033 Monologue_Interruption: Broth Herbal
+34033 Monologue_InterruptionAction: Sp Energy Pill
+34033 NearingDestinationOrder: Chocolate
+34037 GoingAway: Milk Intense
+34040 MonkeyBridge_End: Tomato Cooked
+34040 MonkeyBridge_Start: Progressive Altitude Permit
+34060 CrystalHunterVoiceovers: Chocolate Drink Intense
+35050 CrystalHunter: Alpine Cola
+37010 SmallFall: Progressive Altitude Permit
+41010 GenepiApproach: Eggs Herbal
+44010 Coaching: Eggs Sweet
+44010 CoachingEnd_MarcoOffBelay: Trout Cooked
+44010 Coaching_StartGhost: Trout Herbal
+49999 1FireLineBark: Fruit Paste
+49999 2FireLinesBark: Progressive Altitude Permit
+49999 3FireLinesBark: Lentils And Ham Sweet
+50000 SpecialDomeOutcomeAscent: Jerky
+50000 SpecialDomeOutcomeBackDown: Hallu Pizza
+50000 SpecialDomeOutcomeSuccessLie: Veggies Herbal
+51010 SpecialRidge: Charm Test C
+51020 SpecialRidgeJumps: Mushrooms
+53020 MarcoTired: Bottle Extralarge
+60005 MarcoQuitsSeq: Progressive Altitude Permit
+61005 AvalancheLandmark: Sp Alpine Rice
+61010 Slide: Puff 1
+62010 AvalancheNew: Charm None
+71003 DazedSeq: Mashed Potatoes Cooked
+71010 ShelterMeeting: Trout Sweet
+72015 BinocularsObservation: Raspberries
+72015 Placeholder_InteractionHandler: Charm Louve Doll
+72020 OldMansMissionSeq: Charm Cola
+72047 MarcoBusy_InteractionAction: Hydration Pack
+72047 MarcoBusy_InteractionHandler: Mushrooms Flambeed
+72053 DayFourGoingToWall: Sp Troglodyte Trout
+72057 EventPlaceholder_TP: Food Can
+72057 SeeingSmoothWall: Raspberries Juice
+72060 Duo: Chocolate
+72060 MarcoDuo: Broth Herbal
+72120 TheChoice: Mashed Potatoes Sweet
+72209 FirstGunshot: Bottle Large
+72209 FirstGunshotReaction: Rice
+72209 SecondGunshot: Trout Milk
+72209 SecondGunshotReaction: Progressive Altitude Permit
+72210 BinocularsSequence: Veggies Flambeed
+72226 RifleBadEnding: Puff Upgrade
+72227 RifleGoodEnding: Oat Flakes
+73018 01_END: Sp Nettle Mix
+73018 02_END: Antiseptic
+73018 03_END: Soup Herbal
+73020 SmoothWall: Can Milk
+74010 SpikeWallSeqStarter: Pretzel
+74010 SpikeWall_V2_Intro: Hallu Chicken
+74010 SpikeWall_V2_Outro: Recipe Sp Alpine Rice
+74011 AllowSpikeWallAfterPassOut: Alpine Cola
+82005 Bivouac1: Crystal Piton
+82005 Bivouac1_Marco: Thermos Solar
+82010 Bivouac2: Bottle Medium
+82010 Bivouac2_Tired: Crystal Shards
+82020 Bivouac3_CatNew: Statuette
+82020 BivouacCat: Can Alpine Cola
+82030 BivouacCableCar: Infusion Sweet
+82030 BivouacCableCarEnd: Magic Frog Lick
+83010 HallucinatingRival_CamGhost: Mashed Potatoes Sweet
+83010 HallucinatingRival_Dialog: Food Can
+83010 LEFT_HallucinatingRival_Ghost: Tea Intense
+83010 LEFT_activate_events_base_on_target: Eggs Sweet
+83010 MIDDLE_HallucinatingRival_Ghost: Glass Bottle
+83010 MIDDLE_activate_events_base_on_target: Dangling Pitons
+83010 RIGHT_HallucinatingRival_Ghost: Plantain Sweet
+83010 RIGHT_activate_events_based_on_target: Alc Sangria
+83020 HallucinatingRival2_Dialog: Alc White Russian
+83020 HallucinatingRival_CamGhost: Charm None
+83020 LEFT_HallucinatingRival2_Ghost: Charm Trout
+83020 LEFT_activate_events_based_on_target: Sport Gummies
+83020 MIDDLELEFT_activate_events_based_on_target: Alc Irish Coffee
+83020 MIDDLERIGHT_activate_events_based_on_target: Sp Maple Fudge
+83020 RIGHT_HallucinatingRival2_Ghost: Raspberries Juice
+83020 RIGHT_activate_events_based_on_target: Eggs Sweet
+83030 HallucinatingRival3_CamGhost: Light Stick
+83030 HallucinatingRival3_Dialog: Veggies Lyophi
+83030 HallucinatingRival3_Ghost: Soup Herbal
+83030 activate_event_based_on_cam: Alpine Cola
+83040 Bivouac3: Coffee
+83040 Bivouac3New: Charm Trout
+83040 Bivouac3NewNew: Progressive Altitude Permit
+85010 HallucinatingTheft: Raspberries
+87020 Bivouac5: Charm Cat
+87020 Bivouac5_4thWall: Survival Blanket
+87080 ClimbotUnresponsive_1: Glowing Gloves
+87080 ClimbotUnresponsive_2: Tomato Sweet
+87080 ClimbotUnresponsive_3: Veggies Sweet
+87081 UnragdollClimbot: Soup Herbal
+88020 RivalsEnd: Oat Flakes Flambeed
+88020 RivalsEndNew: Lentils And Ham Milk
+88040 Bivouac7: Mushrooms Cooked
+88040 Bivouac7_Bedroom: Heater
+89010 ClimbotBreakdown: Eggs Sweet
+89010 ClimbotBreakdown_2: Charm The Voice
+89010 ClimbotBreakdown_3: Sp Alpine Rice
+89010 ClimbotBreakdown_4: Antidiarrheals
+89015 CutTheRope: Piton
+91010 SummitNoRobot_ActivateCam: Sp Noodles
+91010 SummitRobot: Soup Sweet
+91020 SummitNoRobot: Mashed Potatoes Cooked
+92010 BeforePoaW_FallDownBark: Can Milk
+92010 BeforePoaW_FirstShoutBark: Brutoflex
+92010 BeforePoaW_SecondShoutBark: Broth
+92010 PartOfAWhole: Quinoa
+92010 PartOfAWholeNoRobot: Raspberries
+92010 PartOfAWholeNoRobot_LastSpline: Fruit Paste
+99000 BeforeCredits: Can Test
+Summit: Summit
+
+Playthrough:
+
+0: {
+
+}
+1: {
+  01010 NukeTent: Progressive Altitude Permit
+}
+2: {
+  14010 Naomi2: Progressive Altitude Permit
+  14010 Naomi2Higher: Progressive Altitude Permit
+}
+3: {
+  34040 MonkeyBridge_Start: Progressive Altitude Permit
+  37010 SmallFall: Progressive Altitude Permit
+}
+4: {
+  49999 2FireLinesBark: Progressive Altitude Permit
+}
+5: {
+  60005 MarcoQuitsSeq: Progressive Altitude Permit
+}
+6: {
+  72209 SecondGunshotReaction: Progressive Altitude Permit
+}
+7: {
+  83040 Bivouac3NewNew: Progressive Altitude Permit
+}
+8: {
+  Summit: Summit
+}

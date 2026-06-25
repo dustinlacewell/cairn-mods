@@ -1,0 +1,164 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write       # create releases + upload assets
+  pages: write          # deploy to GitHub Pages
+  id-token: write       # OIDC for Pages
+
+jobs:
+  # ── Build all mods ─────────────────────────────────────────────────────────
+  build-mods:
+    name: Build mods
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mod:
+          - CairnAPI
+          - CrossMenuLib
+          - CairnNoCutscenes
+          - CairnCarryWeight
+          - CairnFreeRoam
+          - CairnForage
+          - CairnRoutes
+          - CairnTools
+          - CairnAccessories
+          - CairnArchipelago
+          - CairnDevTools
+          - CairnCoop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "6.0.x"
+
+      - name: Build ${{ matrix.mod }}
+        run: dotnet build mods/${{ matrix.mod }} -c Release /p:CI=true /p:NoInstall=1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dll-${{ matrix.mod }}
+          path: mods/${{ matrix.mod }}/bin/Release/${{ matrix.mod }}.dll
+
+  # ── Publish GitHub Release (tags only) ────────────────────────────────────
+  release:
+    name: Publish release
+    needs: build-mods
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dll-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Create release and upload DLLs
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dll
+          generate_release_notes: true
+
+  # ── Build and deploy site ──────────────────────────────────────────────────
+  deploy-site:
+    name: Deploy site
+    needs: build-mods
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dll-*
+          merge-multiple: true
+          path: dist/
+
+      - name: Patch download URLs in mods.ts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Resolve the tag name: use the tag if this is a tag push, otherwise
+          # find the latest release tag (for site deploys from main).
+          if [[ "$REF" == refs/tags/* ]]; then
+            TAG="${REF#refs/tags/}"
+          else
+            TAG=$(gh release list --repo "$REPO" --limit 1 --json tagName -q '.[0].tagName' 2>/dev/null || echo "")
+          fi
+
+          if [[ -z "$TAG" ]]; then
+            echo "No release tag found — keeping placeholder download URLs"
+          else
+            BASE="https://github.com/${REPO}/releases/download/${TAG}"
+            echo "Patching download URLs to $BASE"
+            # Replace the TODO_DOWNLOAD constant with the real base URL.
+            # mods.ts uses: const TODO_DOWNLOAD = "#download-coming-soon";
+            # We patch each mod's download field by DLL filename.
+            node -e "
+              const fs = require('fs');
+              const path = 'site/src/data/mods.ts';
+              let src = fs.readFileSync(path, 'utf8');
+              // Replace TODO_DOWNLOAD sentinel with actual release URL per mod slug.
+              // Each mod object has slug matching its DLL name exactly.
+              const base = '$BASE';
+              // Map slug → dll name (slug is lowercase, dll is PascalCase)
+              const slugToDll = {
+                cairncoop:        'CairnCoop',
+                cairnroutes:      'CairnRoutes',
+                cairnfreeroam:    'CairnFreeRoam',
+                cairnforage:      'CairnForage',
+                cairncarryweight: 'CairnCarryWeight',
+                cairnaccessories: 'CairnAccessories',
+                cairnnocutscenes: 'CairnNoCutscenes',
+                cairnarchipelago: 'CairnArchipelago',
+                cairntools:       'CairnTools',
+                cairnapi:         'CairnAPI',
+                cairndevtools:    'CairnDevTools',
+              };
+              // Replace each slug's TODO_DOWNLOAD with real URL
+              for (const [slug, dll] of Object.entries(slugToDll)) {
+                const url = base + '/' + dll + '.dll';
+                // Match: slug: \"...\", ... download: TODO_DOWNLOAD
+                // Use a regex that finds the slug block and replaces its download field
+                const re = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?download:\\\\s*)TODO_DOWNLOAD', 'g');
+                src = src.replace(re, (m, pre) => pre + JSON.stringify(url));
+              }
+              fs.writeFileSync(path, src);
+              console.log('Patched mods.ts');
+            "
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install site deps
+        run: npm ci
+        working-directory: site
+
+      - name: Build site
+        run: npm run build
+        working-directory: site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

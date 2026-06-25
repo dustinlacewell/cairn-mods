@@ -1,0 +1,8 @@
+<Project>
+  <!-- On CI, redirect GameDir to the stripped reference assemblies committed in game-refs/.
+       Locally, GameDir stays as defined in each .csproj (P:\Steam\...). -->
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <GameDir>$(MSBuildThisFileDirectory)..\game-refs</GameDir>
+    <NoInstall>1</NoInstall>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,929 @@
+---
+const locations = 146;
+const items = 284;
+const chapters = 10;
+const permits = 9;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cairn × Archipelago</title>
+  <style>
+    :root {
+      --bg:       #0e0f11;
+      --surface:  #161820;
+      --border:   #2a2d38;
+      --accent:   #7aa2f7;
+      --accent2:  #9ece6a;
+      --accent3:  #e0af68;
+      --muted:    #565f89;
+      --text:     #c0caf5;
+      --dim:      #787c99;
+      --red:      #f7768e;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Hero ────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(122,162,247,.10) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(158,206,106,.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4em;
+      background: rgba(122,162,247,.10);
+      border: 1px solid rgba(122,162,247,.25);
+      color: var(--accent);
+      font-size: .75rem;
+      font-family: var(--font-mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: .3em .8em;
+      border-radius: 2em;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.05;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero h1 .x {
+      color: var(--muted);
+      font-weight: 300;
+      padding: 0 .15em;
+    }
+
+    .hero h1 .cairn { color: var(--text); }
+    .hero h1 .ap    { color: var(--accent); }
+
+    .hero p.tagline {
+      max-width: 540px;
+      color: var(--dim);
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .1em;
+    }
+
+    .stat .n {
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat .label {
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--dim);
+    }
+
+    .stat-divider {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5em;
+      padding: .65em 1.5em;
+      border-radius: .4em;
+      font-size: .9rem;
+      font-weight: 600;
+      transition: filter .15s;
+      border: 1px solid transparent;
+    }
+    .btn:hover { filter: brightness(1.15); text-decoration: none; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0e0f11;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--muted);
+      font-size: .75rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .4em;
+      animation: bob 2s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ── Docs layout ────────────────────────── */
+    .docs {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 4rem 2rem 6rem;
+    }
+
+    .section {
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      margin-bottom: .6rem;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: .5rem;
+    }
+
+    p {
+      color: var(--dim);
+      margin-bottom: .9rem;
+    }
+
+    ul, ol {
+      color: var(--dim);
+      padding-left: 1.5em;
+    }
+
+    li { margin-bottom: .35em; }
+
+    /* ── Cards ──────────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .6em;
+      padding: 1.25rem 1.4rem;
+    }
+
+    .card .card-icon {
+      font-size: 1.4rem;
+      margin-bottom: .6rem;
+    }
+
+    .card h3 {
+      font-size: .95rem;
+      margin-bottom: .35rem;
+    }
+
+    .card p {
+      font-size: .85rem;
+      margin: 0;
+    }
+
+    /* ── Steps ──────────────────────────────── */
+    .steps {
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 1.2rem;
+    }
+
+    .step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      counter-increment: step;
+      min-width: 2em;
+      height: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(122,162,247,.12);
+      border: 1px solid rgba(122,162,247,.25);
+      border-radius: 50%;
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: .1em;
+    }
+
+    .step-num::after { content: counter(step); }
+
+    .step-body h3 { font-size: .95rem; }
+    .step-body p  { font-size: .87rem; margin: .2em 0 0; }
+
+    /* ── Code blocks ────────────────────────── */
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .5em;
+      padding: 1.1rem 1.3rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: .82rem;
+      line-height: 1.65;
+      color: var(--text);
+      margin: .8rem 0 1.2rem;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: .85em;
+      background: rgba(255,255,255,.06);
+      padding: .1em .4em;
+      border-radius: .25em;
+      color: var(--accent);
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+      font-size: inherit;
+      color: inherit;
+      border-radius: 0;
+    }
+
+    .comment { color: var(--muted); }
+    .kw      { color: var(--accent); }
+    .str     { color: var(--accent2); }
+    .num     { color: var(--accent3); }
+    .type    { color: #bb9af7; }
+
+    /* ── ID table ───────────────────────────── */
+    .id-scheme {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .6em;
+      overflow: hidden;
+      margin-top: 1.2rem;
+    }
+
+    .id-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .id-row + .id-row { border-top: 1px solid var(--border); }
+
+    .id-cell {
+      background: var(--surface);
+      padding: .65rem 1rem;
+      font-family: var(--font-mono);
+      font-size: .82rem;
+    }
+
+    .id-cell.head {
+      background: rgba(122,162,247,.06);
+      color: var(--dim);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .id-cell .accent  { color: var(--accent); }
+    .id-cell .accent2 { color: var(--accent2); }
+    .id-cell .accent3 { color: var(--accent3); }
+
+    /* ── Pipeline diagram ───────────────────── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+      margin: 1.2rem 0;
+    }
+
+    .pipe-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: .4em;
+      padding: .5em 1em;
+      font-size: .82rem;
+      font-family: var(--font-mono);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .pipe-arrow {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    /* ── Chapter table ──────────────────────── */
+    .chapter-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+      margin-top: 1rem;
+    }
+
+    .chapter-table th {
+      text-align: left;
+      color: var(--dim);
+      font-weight: 500;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: .5rem .8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chapter-table td {
+      padding: .5rem .8rem;
+      border-bottom: 1px solid rgba(42,45,56,.6);
+      color: var(--dim);
+      font-family: var(--font-mono);
+    }
+
+    .chapter-table td:first-child { color: var(--text); }
+
+    /* ── Divider ────────────────────────────── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* ── Status pill ────────────────────────── */
+    .pill {
+      display: inline-block;
+      font-size: .7rem;
+      font-family: var(--font-mono);
+      padding: .15em .6em;
+      border-radius: 1em;
+      vertical-align: middle;
+      margin-left: .4em;
+    }
+
+    .pill-done  { background: rgba(158,206,106,.15); color: var(--accent2); border: 1px solid rgba(158,206,106,.3); }
+    .pill-wip   { background: rgba(224,175,104,.12); color: var(--accent3); border: 1px solid rgba(224,175,104,.3); }
+    .pill-todo  { background: rgba(86,95,137,.15);   color: var(--muted);   border: 1px solid rgba(86,95,137,.3); }
+
+    /* ── Footer ─────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
+    /* ── Nav ────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(14,15,17,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: .6rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: .82rem;
+      color: var(--dim);
+    }
+
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span>Cairn</span> × Archipelago</div>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#setup">Setup</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────── -->
+<section class="hero">
+  <div class="badge">v0.1.0 — pre-release</div>
+
+  <h1>
+    <span class="cairn">Cairn</span>
+    <span class="x">×</span>
+    <span class="ap">Archipelago</span>
+  </h1>
+
+  <p class="tagline">
+    Multiworld randomizer for The Game Bakers' Cairn. Climb Mount Kami
+    while unlocking items for your friends — and receiving theirs.
+  </p>
+
+  <div class="stats-row">
+    <div class="stat">
+      <span class="n">{locations}</span>
+      <span class="label">Locations</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="n">{items}</span>
+      <span class="label">Items</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="n">{chapters}</span>
+      <span class="label">Chapters</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="n">{permits}</span>
+      <span class="label">Permits</span>
+    </div>
+  </div>
+
+  <div class="cta-row">
+    <a href="#setup" class="btn btn-primary">Get started</a>
+    <a href="#architecture" class="btn btn-secondary">Architecture</a>
+  </div>
+
+  <div class="scroll-hint">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    scroll
+  </div>
+</section>
+
+<!-- ── Docs ──────────────────────────────────────── -->
+<main class="docs">
+
+  <!-- What is this -->
+  <section class="section" id="how-it-works">
+    <div class="section-label">Overview</div>
+    <h2>How it works</h2>
+    <p>
+      <a href="https://archipelago.gg">Archipelago</a> is a multiworld randomizer platform. Each player
+      plays a different game; when you check a location in yours, that unlocks an item somewhere in
+      a friend's game — and vice versa. Cairn × Archipelago wires the climbing route into this system.
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📍</div>
+        <h3>Story beats → locations</h3>
+        <p>
+          The route's {locations} numbered milestones (story sensors like <code>02010 FirstLanding</code>)
+          become location checks. They trigger automatically as you climb — no extra interaction.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎒</div>
+        <h3>Inventory items shuffled</h3>
+        <p>
+          {items} game items — food, water, medicine, pitons, rope, charms — are pooled into the
+          multiworld and distributed across all players' games.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏔️</div>
+        <h3>Altitude gated by permits</h3>
+        <p>
+          {permits} Progressive Altitude Permits gate each chapter transition. You can't advance
+          past a chapter boundary until the multiworld delivers the permit for that elevation.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎯</div>
+        <h3>Goal: the summit</h3>
+        <p>
+          The final story sensor at the top of Mount Kami is the goal location. Reaching it sends
+          <code>StatusUpdate(Goal)</code> and completes your slot.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- Setup -->
+  <section class="section" id="setup">
+    <div class="section-label">Installation</div>
+    <h2>Setup</h2>
+
+    <h3>Prerequisites</h3>
+    <p>You need:</p>
+    <ul>
+      <li><strong>Cairn</strong> on Steam</li>
+      <li><a href="https://melonwiki.xyz">MelonLoader</a> installed into the Cairn game folder</li>
+      <li>An <a href="https://archipelago.gg">Archipelago</a> server to connect to (or run your own)</li>
+    </ul>
+
+    <h3 style="margin-top:1.5rem">Install the mod</h3>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <h3>Copy mod files</h3>
+          <p>
+            Place <code>CairnArchipelago.dll</code> into <code>Mods/</code> inside your Cairn game folder.
+            Place <code>Archipelago.MultiClient.Net.dll</code> and <code>Newtonsoft.Json.dll</code>
+            into <code>UserLibs/</code>.
+          </p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <h3>Configure connection</h3>
+          <p>
+            Launch Cairn once with MelonLoader to generate <code>UserData/MelonPreferences.cfg</code>,
+            then edit the <code>[CairnArchipelago]</code> section:
+          </p>
+          <pre><code>[CairnArchipelago]
+Enabled = true
+Host    = archipelago.gg
+Port    = 38281
+SlotName = Aava
+Password =          <span class="comment"># leave blank if no password</span></code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <h3>Add the apworld</h3>
+          <p>
+            Drop the <code>cairn.apworld</code> file into your Archipelago installation's
+            <code>worlds/</code> folder (or use the Archipelago launcher's custom worlds path).
+          </p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <h3>Generate your YAML</h3>
+          <p>
+            Use the Archipelago launcher to generate a template YAML for Cairn, or copy the minimal
+            form below. Set your slot name and any options, then submit it to your host.
+          </p>
+          <pre><code><span class="kw">name</span>: Aava
+<span class="kw">game</span>: Cairn
+<span class="kw">description</span>: Cairn player slot
+
+<span class="kw">Cairn</span>:
+  <span class="kw">death_link</span>: <span class="num">false</span>     <span class="comment"># set true to share deaths with the multiworld</span></code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <div class="step-body">
+          <h3>Start climbing</h3>
+          <p>
+            Launch Cairn. The mod connects automatically when you load a save.
+            Watch the MelonLoader console for <code>[check]</code> and <code>[item]</code> lines
+            confirming the connection is live.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2rem">Options</h3>
+    <table class="chapter-table">
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Values</th>
+          <th>Effect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>death_link</td>
+          <td>true / false</td>
+          <td>When you fall, everyone with death_link on dies. When they die, you die.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr />
+
+  <!-- Architecture -->
+  <section class="section" id="architecture">
+    <div class="section-label">Technical Reference</div>
+    <h2>Architecture</h2>
+
+    <p>
+      The mod is two independent pieces: a Python <strong>apworld</strong> that runs on the
+      Archipelago server/generator, and a C# <strong>MelonLoader mod</strong> that runs inside
+      the game. They share nothing at runtime except the numeric ID scheme.
+    </p>
+
+    <h3>ID scheme</h3>
+    <p>
+      Both sides recover game IDs from AP IDs arithmetically — no lookup tables anywhere:
+    </p>
+
+    <div class="id-scheme">
+      <div class="id-row">
+        <div class="id-cell head">Kind</div>
+        <div class="id-cell head">Formula</div>
+        <div class="id-cell head">Example</div>
+      </div>
+      <div class="id-row">
+        <div class="id-cell"><span class="accent">Item</span></div>
+        <div class="id-cell"><code>71_110_000 + InventoryItemStringIdEnum</code></div>
+        <div class="id-cell accent3">71110042 → enum value 42</div>
+      </div>
+      <div class="id-row">
+        <div class="id-cell"><span class="accent2">Location</span></div>
+        <div class="id-cell"><code>71_120_000 + StoryEventSensorStringIdEnum</code></div>
+        <div class="id-cell accent3">71120007 → enum value 7</div>
+      </div>
+      <div class="id-row">
+        <div class="id-cell"><span class="type">Permit</span></div>
+        <div class="id-cell"><code>71_110_000 − 1 = 71_109_999</code></div>
+        <div class="id-cell">Abstract — no game inventory form</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:2rem">Check pipeline</h3>
+    <p>
+      Story sensors fire once per route milestone. The Harmony postfix converts them into AP
+      location checks with no game state modifications:
+    </p>
+    <div class="pipeline">
+      <div class="pipe-box">StoryEventSensor<br/>.OnTrigger()</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">Hooks.cs postfix<br/>reads setup.id.Value</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">Core.OnStorySensor<br/>Triggered()</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">ApClient.SendLocation<br/>Check()</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">AP server<br/>CompleteLocationChecks</div>
+    </div>
+
+    <h3>Item grant pipeline</h3>
+    <div class="pipeline">
+      <div class="pipe-box">AP server sends<br/>item</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">OnItemReceived<br/>(socket thread)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">ConcurrentQueue<br/>PendingItem</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">PumpReceivedItems<br/>(main thread)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">ItemGranter.Grant<br/>→ inventory.Add()</div>
+    </div>
+    <p>
+      Items arrive on the WebSocket thread and are queued; grants happen on Unity's main thread
+      once <code>InventoryManager.InventoriesCreated</code> is true. The
+      <strong>GrantLedger</strong> persists a per-seed grant count to
+      <code>UserData/CairnArchipelago/ledger-&lt;seed&gt;-&lt;slot&gt;.json</code>,
+      preventing double-grants on reconnect.
+    </p>
+
+    <h3>Chapter regions</h3>
+    <p>
+      Sensor enum names encode their position: <code>_XYNNN_Label</code> where the first digit
+      is the chapter (0–9) and the next is the sub-zone. The apworld groups sensors by first
+      digit into {chapters} chapter regions connected by permit gates:
+    </p>
+    <table class="chapter-table">
+      <thead>
+        <tr>
+          <th>Chapter</th>
+          <th>Zone prefix</th>
+          <th>Permits to enter</th>
+        </tr>
+      </thead>
+      <tbody>
+        {[0,1,2,3,4,5,6,7,8,9].map(i => (
+          <tr>
+            <td>Chapter {i}</td>
+            <td>{i}x___</td>
+            <td>{i === 0 ? '— (start)' : `${i} permit${i > 1 ? 's' : ''}`}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:2rem">Inventory routing</h3>
+    <p>
+      Each game item carries a <code>storedIn: StorageType</code> field. The granter switches on
+      it to route to the right inventory manager property:
+    </p>
+    <pre><code><span class="kw">switch</span> (storage)
+&#123;
+    <span class="kw">case</span> StorageType.Bag:      <span class="kw">return</span> manager.BagInventoryData;
+    <span class="kw">case</span> StorageType.Puff:     <span class="kw">return</span> manager.PuffInventoryData;
+    <span class="kw">case</span> StorageType.Readables:<span class="kw">return</span> manager.ReadablesInventoryData;
+    <span class="kw">case</span> StorageType.Piton:    <span class="kw">return</span> manager.PitonInventoryData;
+    <span class="kw">case</span> StorageType.Robot:    <span class="kw">return</span> manager.ClimbotInventoryData;
+    <span class="kw">case</span> StorageType.Infinite: <span class="kw">return</span> manager.InfiniteInventoryData;
+    <span class="kw">case</span> StorageType.Charms:   <span class="kw">return</span> manager.CharmsInventoryData;
+&#125;</code></pre>
+
+    <h3>World data generation</h3>
+    <p>
+      <code>ap/apworld/cairn/data.py</code> is generated — never edit by hand. The extractor
+      parses <code>dump/dump.cs</code> (Il2CppDumper output) and outputs both enums as Python
+      tuples. Regenerate after a game update:
+    </p>
+    <pre><code>python ap/tools/extract_ap_data.py</code></pre>
+
+    <h3>F8 Scanner</h3>
+    <p>
+      Press <kbd style="background:var(--surface);border:1px solid var(--border);padding:.1em .4em;border-radius:.25em;font-family:var(--font-mono);font-size:.85em">F8</kbd>
+      in-game to dump the active scene's interaction providers (all loot spots, with stable
+      <code>gpeId</code> values), story sensors, and the full item library to
+      <code>UserData/CairnArchipelago/scans/scan-&lt;scene&gt;.json</code>.
+      This is the dataset v2's loot-pickup locations will be authored from.
+    </p>
+
+    <h3>File layout</h3>
+    <pre><code>ap/
+  apworld/cairn/
+    __init__.py          <span class="comment"># CairnWorld — regions, items, rules, slot_data</span>
+    data.py              <span class="comment"># GENERATED — item + sensor enums</span>
+    items.py             <span class="comment"># CairnItem, item_name_to_id, classifications</span>
+    locations.py         <span class="comment"># CairnLocation, location_name_to_id, by-chapter map</span>
+    options.py           <span class="comment"># CairnOptions (death_link)</span>
+    archipelago.json     <span class="comment"># apworld manifest</span>
+    docs/
+      en_Cairn.md        <span class="comment"># in-launcher game description</span>
+      setup_en.md        <span class="comment"># in-launcher setup guide</span>
+  tools/
+    extract_ap_data.py   <span class="comment"># enum extractor → data.py</span>
+  test/
+    Players/Aava.yaml    <span class="comment"># solo test player file</span>
+
+mods/CairnArchipelago/
+  Core.cs                <span class="comment"># MelonMod entry, prefs, OnUpdate pump</span>
+  ApClient.cs            <span class="comment"># WebSocket client, queue, reconnect</span>
+  ItemGranter.cs         <span class="comment"># AP id → inventory.Add()</span>
+  GrantLedger.cs         <span class="comment"># persist grant count across sessions</span>
+  Hooks.cs               <span class="comment"># Harmony patches (StoryEventSensor, LootProvider log)</span>
+  Scanner.cs             <span class="comment"># F8 world dump</span></code></pre>
+  </section>
+
+  <hr />
+
+  <!-- Roadmap -->
+  <section class="section" id="roadmap">
+    <div class="section-label">Status</div>
+    <h2>Roadmap</h2>
+
+    <p>
+      v1 is built and generation-tested. The AP generator produces a valid seed
+      ({locations} locations filled, spoiler log verified). The mod compiles against the game's
+      Il2Cpp proxy assemblies. In-game playtesting is the next step.
+    </p>
+
+    <h3>v1 — current <span class="pill pill-done">built</span></h3>
+    <ul>
+      <li>Story-sensor location checks ({locations} locations)</li>
+      <li>Item grants into the correct inventory by <code>storedIn</code> type</li>
+      <li>Progressive Altitude Permits as progression items</li>
+      <li>Goal detection (final sensor → <code>StatusUpdate(Goal)</code>)</li>
+      <li>GrantLedger (no double-grants on reconnect)</li>
+      <li>DeathLink send-side plumbing</li>
+      <li>F8 world scanner (loot spot dataset for v2)</li>
+      <li>Auto-reconnect (15 s backoff)</li>
+    </ul>
+
+    <h3 style="margin-top:1.5rem">v2 <span class="pill pill-todo">planned</span></h3>
+    <ul>
+      <li>In-game playtest and bug fixes</li>
+      <li>Loot pickups as locations (suppress vanilla grant on <code>LootProvider.Interact</code>, send check instead)</li>
+      <li>Chapter gate enforcement using permits (block climbing past chapter boundary)</li>
+      <li>DeathLink receive (kill / pass-out the climber)</li>
+      <li>HUD toasts for sent/received items</li>
+    </ul>
+
+    <h3 style="margin-top:1.5rem">v3 <span class="pill pill-todo">planned</span></h3>
+    <ul>
+      <li>Lootsanity option (opt into loot-pickup locations)</li>
+      <li>Logic refinement from playtest scans</li>
+      <li>Trap items</li>
+      <li>Release packaging (<code>cairn.apworld</code> + mod zip)</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  Cairn × Archipelago — ldlework &nbsp;·&nbsp;
+  <a href="https://github.com/ldlework">GitHub</a> &nbsp;·&nbsp;
+  <a href="https://archipelago.gg">archipelago.gg</a>
+</footer>
+
+</body>
+</html>

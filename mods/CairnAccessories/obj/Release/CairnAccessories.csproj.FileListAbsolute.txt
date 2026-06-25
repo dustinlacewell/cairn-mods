@@ -1,0 +1,10 @@
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\bin\Release\CairnAccessories.deps.json
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\bin\Release\CairnAccessories.dll
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\CairnAccessories.csproj.AssemblyReference.cache
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\CairnAccessories.GeneratedMSBuildEditorConfig.editorconfig
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\CairnAccessories.AssemblyInfoInputs.cache
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\CairnAccessories.AssemblyInfo.cs
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\CairnAccessories.csproj.CoreCompileInputs.cache
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\CairnAccessories.dll
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\refint\CairnAccessories.dll
+D:\code\ghidra\cairn-mp\mods\CairnAccessories\obj\Release\ref\CairnAccessories.dll
