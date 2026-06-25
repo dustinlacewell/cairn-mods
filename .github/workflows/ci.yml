@@ -71,7 +71,7 @@ jobs:
   deploy-site:
     name: Deploy site
     needs: [config, build-mods]
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
