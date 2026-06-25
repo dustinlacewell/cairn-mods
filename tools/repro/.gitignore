@@ -1,4 +1,0 @@
-node_modules/
-runs/
-# Event-bus durable consumer cursors — per-machine runtime state (see src/cursor.ts), not source.
-.events/
