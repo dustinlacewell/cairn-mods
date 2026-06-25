@@ -1,11 +1,11 @@
 ---
 import Layout from "../../components/Layout.astro";
-import { mods, mod as findMod, kindLabel } from "../../data/mods";
+import { publishedMods, mod as findMod, kindLabel } from "../../data/mods";
 import type { DocSection } from "../../data/mods";
 import { codeToHtml } from "shiki";
 
 export function getStaticPaths() {
-  return mods.map((m) => ({ params: { slug: m.slug } }));
+  return publishedMods.map((m) => ({ params: { slug: m.slug } }));
 }
 
 const { slug } = Astro.params;

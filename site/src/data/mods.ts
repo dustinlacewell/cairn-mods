@@ -2,6 +2,9 @@
 // The landing listing, the directory, and each /mods/<slug>/ page read from here.
 //
 // CrossMenuLib is intentionally absent: its capabilities are folding into CairnAPI.
+//
+import publishConfig from "../../../publish.json";
+export const publishedSlugs = new Set<string>(publishConfig.mods.map((s: string) => s.toLowerCase()));
 
 export type ModKind = "library" | "player" | "dev";
 
@@ -811,10 +814,11 @@ if (g4.WasPerformedThisFrame()) DoThing();`,
   },
 ];
 
-export const mod = (slug: string) => mods.find((m) => m.slug === slug);
-
 export const kindLabel: Record<ModKind, string> = {
   player: "mod",
   library: "lib",
   dev: "dev",
 };
+
+export const publishedMods = mods.filter((m) => publishedSlugs.has(m.slug));
+export const mod = (slug: string) => publishedMods.find((m) => m.slug === slug);

@@ -1,10 +1,10 @@
 ---
 import Layout from "../../components/Layout.astro";
-import { mods, kindLabel } from "../../data/mods";
+import { publishedMods, kindLabel } from "../../data/mods";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const players = mods.filter((m) => m.kind === "player");
-const libs = mods.filter((m) => m.kind !== "player");
+const players = publishedMods.filter((m) => m.kind === "player");
+const libs = publishedMods.filter((m) => m.kind !== "player");
 ---
 
 <Layout title="Mods — Cairn mods" description="Every Cairn mod in the collection." active="mods">
