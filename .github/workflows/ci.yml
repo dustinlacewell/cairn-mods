@@ -9,12 +9,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write       # create releases + upload assets
-  pages: write          # deploy to GitHub Pages
-  id-token: write       # OIDC for Pages
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
-  # ── Resolve published mod list from publish.json ───────────────────────────
+  # ── Build published mods ───────────────────────────────────────────────────
   config:
     name: Read publish.json
     runs-on: ubuntu-latest
@@ -25,7 +25,6 @@ jobs:
       - id: read
         run: echo "mods=$(jq -c '.mods' publish.json)" >> $GITHUB_OUTPUT
 
-  # ── Build published mods ───────────────────────────────────────────────────
   build-mods:
     name: Build ${{ matrix.mod }}
     needs: config
@@ -44,12 +43,13 @@ jobs:
         run: dotnet build mods/${{ matrix.mod }} -c Release /p:CI=true /p:NoInstall=1 /p:GameDir="$GITHUB_WORKSPACE/game-refs"
 
       - name: Upload artifact
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: dll-${{ matrix.mod }}
           path: mods/${{ matrix.mod }}/bin/Release/${{ matrix.mod }}.dll
 
-  # ── Publish GitHub Release (tags only) ────────────────────────────────────
+  # ── Tags only: release then deploy site ───────────────────────────────────
   release:
     name: Publish release
     needs: build-mods
@@ -68,11 +68,10 @@ jobs:
           files: dist/*.dll
           generate_release_notes: true
 
-  # ── Build and deploy site ──────────────────────────────────────────────────
   deploy-site:
     name: Deploy site
-    needs: [config, build-mods]
-    if: github.ref == 'refs/heads/main'
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -88,24 +87,11 @@ jobs:
 
       - name: Patch download URLs
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
-          REF: ${{ github.ref }}
+          TAG: ${{ github.ref_name }}
         run: |
-          if [[ "$REF" == refs/tags/* ]]; then
-            TAG="${REF#refs/tags/}"
-          else
-            TAG=$(gh release list --repo "$REPO" --limit 1 --json tagName -q '.[0].tagName' 2>/dev/null || echo "")
-          fi
-
-          if [[ -z "$TAG" ]]; then
-            echo "No release tag found — keeping placeholder download URLs"
-            exit 0
-          fi
-
           BASE="https://github.com/${REPO}/releases/download/${TAG}"
           echo "Patching download URLs to $BASE"
-
           node -e "
             const fs = require('fs');
             const published = JSON.parse(fs.readFileSync('publish.json', 'utf8')).mods;
