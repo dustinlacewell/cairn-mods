@@ -25,8 +25,7 @@ namespace CairnAPI;
 // keycap repaint fires only on a real keyboard↔gamepad device switch (input-glyph-system.md §4). (b) the loc
 // re-stamp (LocalizedText.Refresh → set_text) is RAIL-internal: it only visits widgets the rail inserted into
 // gameplayPrompts/promptUis. A TMP on our own GameObject is never visited, so a plain `tmp.text=` persists.
-// So text + glyph are written exactly once at Show. (The OLD Tier-1/2 PromptTextPump existed only because the
-// rail re-stamps POOLED widgets — see onRail below, which participates in that pipeline instead of fighting it.)
+// So text + glyph are written exactly once at Show.
 //
 // Built from the proven self-sizing InputPrompt construction (formerly MenuPrompt): root TMP label + a
 // left-anchored InputImageStaticAction glyph, fetching the game's own font/material/sprite by name. The row
@@ -37,20 +36,11 @@ public static class ScreenPrompt
     /// Show a screen-space prompt. <paramref name="text"/> is shown as-is, <paramref name="glyph"/> is the
     /// button icon (see <see cref="Glyph"/>, null = none). If <paramref name="parent"/> is null the row goes
     /// under a mod-owned overlay Canvas — place it with <see cref="Move"/>; if given, the row is parented there
-    /// (self-sizes for a HorizontalLayoutGroup). <paramref name="onRail"/> joins the game's prompt rail to
-    /// inherit its fade/priority/stacking (opt-in; see §3 — NEW, pending live verification of the parser seam).
+    /// (self-sizes for a HorizontalLayoutGroup).
     /// Returns a handle, or <see cref="ScreenPromptHandle.Invalid"/> if a required game asset isn't loaded yet.
     /// </summary>
-    public static ScreenPromptHandle Show(string text, InputAction glyph = null, Transform parent = null,
-        bool onRail = false)
+    public static ScreenPromptHandle Show(string text, InputAction glyph = null, Transform parent = null)
     {
-        // onRail (rail fade/priority/stacking via the parser seam) is DESIGNED but NOT yet live-proven — the
-        // convenience-register path rendered a stray glyph with no row/text on screen (see ShowOnRail). Until the
-        // rail-row construction is verified, onRail falls back to the proven own-Canvas path so callers always get
-        // a working prompt. The parser-seam wiring is retained below for the investigation; it is not wired in.
-        if (onRail)
-            MelonLogger.Warning("[CairnAPI] ScreenPrompt onRail not yet verified — using own-Canvas fallback.");
-
         // The font is the load-bearing asset: without it the label can't render and the row has no width.
         var font = PromptAssets.Find<TMP_FontAsset>("Cairn_TextFont");
         if (font == null) return ScreenPromptHandle.Invalid;
@@ -93,7 +83,7 @@ public static class ScreenPrompt
     /// <summary>Show / hide the prompt (a layout group re-flows around a hidden one). Cheap — no re-register.</summary>
     public static void SetActive(ScreenPromptHandle handle, bool active) => handle?.SetActive(active);
 
-    /// <summary>Destroy the prompt (and unregister it if it was on the rail). Safe on an invalid handle.</summary>
+    /// <summary>Destroy the prompt. Safe on an invalid handle.</summary>
     public static void Hide(ScreenPromptHandle handle) => handle?.Destroy();
 
     // ── own overlay Canvas (created lazily, shared by every parent-less ScreenPrompt) ─────────────────────────
@@ -120,49 +110,6 @@ public static class ScreenPrompt
         }
         catch { _overlay = null; }
         return _overlay;
-    }
-
-    // ── on-rail: opt-in fade / priority / stacking via the LocalizedText.parser seam (§3) ─────────────────────
-
-    // Register on the game's prompt rail with the REAL InputAction (the rail resolves the glyph itself), then
-    // drive our literal through the rail's own text pipeline at the ONE per-widget seam it provides:
-    // LocalizedText.parser (a public Func<string,string>, dump.cs:135297). Each rail rebuild runs
-    // SetPromptData → ChangeLocKey → Refresh, which resolves the loc string THEN — if parser != null — replaces
-    // it with parser(resolved) and calls set_text unconditionally (Refresh.c:37-42,59-60). So setting
-    // parser = _ => literal makes our text land on every rebuild, pump-free, with fade/priority/stacking intact.
-    //
-    // NEW + UNVERIFIED-LIVE: the parser-seam paint is reasoned from the decompiles but not yet confirmed on
-    // screen. Implemented DEFENSIVELY (try/catch, null-guards, never throws into the mod). The bound pooled
-    // LocalizedText can be re-pooled to a different prompt; a tiny guard reasserts parser only when our prompt
-    // is (re)bound — far cheaper than the old text-pump (one field on rebind, not a full re-stamp every frame).
-    private static ScreenPromptHandle ShowOnRail(string text, InputAction glyph)
-    {
-        var hud = Hud;
-        if (hud == null) return ScreenPromptHandle.Invalid;
-
-        GameplayPromptHandle native;
-        try
-        {
-            // Register under an empty loc key with the real action; the rail authors the glyph + keycap itself.
-            native = hud.RegisterPrompt(
-                EmptyLocKey(), glyph, true,
-                null, false, false, 0f, false, 0f, null, false, null, false, false);
-        }
-        catch { return ScreenPromptHandle.Invalid; }
-
-        var h = new ScreenPromptHandle(native, text ?? string.Empty);
-        RailParserGuard.Track(h);   // sets/reasserts parser on the bound pooled LocalizedText (per-widget, on rebind)
-        return h;
-    }
-
-    /// <summary>The one live prompt HUD (the rail), or null before in-game UI init.</summary>
-    public static GameplayPromptHud Hud
-    {
-        get
-        {
-            var ui = MoSingleton<GlobalUIs>.Instance;
-            return ui != null ? ui.gameplayPromptHud : null;
-        }
     }
 
     // ── construction (lifted from the proven self-sizing InputPrompt row; built from scratch, no template) ────
@@ -287,36 +234,24 @@ public static class ScreenPrompt
         }
         catch { return null; }
     }
-
-    private static ParametrizedLocKey EmptyLocKey() => new ParametrizedLocKey(new LocKeyStringId());
 }
 
 /// <summary>Opaque handle to a shown <see cref="ScreenPrompt"/>. Pass it back to <see cref="ScreenPrompt.Hide"/>.</summary>
 public sealed class ScreenPromptHandle
 {
-    // off-rail (own widget): the row we built and its cached components.
+    // the row we built and its cached components.
     internal readonly RectTransform Root;
     private readonly InputPrompt _prompt;
     private readonly TGBImg _glyph;
     private readonly LocalizedText _label;
     internal readonly bool OwnCanvas;
 
-    // on-rail: the native handle + the literal the parser-guard keeps applied.
-    internal GameplayPromptHandle Native;
-    internal string Text;
-    internal readonly bool OnRail;
-
     private bool _valid;
 
     internal ScreenPromptHandle(RectTransform root, InputPrompt prompt, TGBImg glyph, LocalizedText label, bool ownCanvas)
     {
         Root = root; _prompt = prompt; _glyph = glyph; _label = label; OwnCanvas = ownCanvas;
-        OnRail = false; _valid = true;
-    }
-
-    internal ScreenPromptHandle(GameplayPromptHandle native, string text)
-    {
-        Native = native; Text = text ?? string.Empty; OnRail = true; _valid = true;
+        _valid = true;
     }
 
     private ScreenPromptHandle() { _valid = false; }
@@ -325,7 +260,6 @@ public sealed class ScreenPromptHandle
 
     public bool Valid => _valid;
     internal void Invalidate() => _valid = false;
-    internal int Id => Native.id;
 
     // Set the visible label to a plain string. We DISABLE the LocalizedText resolver — its (empty) loc key would
     // otherwise resolve to "[none_string]" on first refresh and overwrite us (persistent alone didn't hold;
@@ -333,15 +267,13 @@ public sealed class ScreenPromptHandle
     internal void SetText(string text)
     {
         if (!_valid) return;
-        Text = text ?? string.Empty;
-        if (OnRail) return;   // the rail path carries text via the parser guard, not the label TMP
         try
         {
             var tmp = _label != null ? _label.text : null;
             if (tmp != null)
             {
                 _label.enabled = false;
-                tmp.text = Text;
+                tmp.text = text ?? string.Empty;
                 tmp.enabled = true;
             }
         }
@@ -352,7 +284,7 @@ public sealed class ScreenPromptHandle
     // for the active device, exactly like a native prompt. Set once — repaints only on a real device switch.
     internal void SetGlyph(InputAction action)
     {
-        if (!_valid || OnRail) return;
+        if (!_valid) return;
         try
         {
             if (_glyph != null)
@@ -369,92 +301,16 @@ public sealed class ScreenPromptHandle
     /// <summary>Show / hide the prompt (the layout group re-flows around a hidden one).</summary>
     public void SetActive(bool active)
     {
-        if (!_valid || OnRail) return;   // a rail prompt's visibility is the rail's (unregister to hide)
+        if (!_valid) return;
         if (_prompt != null) _prompt.gameObject.SetActive(active);
     }
 
-    /// <summary>Destroy the prompt GameObject (or unregister it from the rail). Idempotent.</summary>
+    /// <summary>Destroy the prompt GameObject. Idempotent.</summary>
     public void Destroy()
     {
         if (!_valid) return;
         _valid = false;
-        if (OnRail)
-        {
-            RailParserGuard.Untrack(this);
-            var hud = ScreenPrompt.Hud;
-            var native = Native;
-            if (hud != null)
-                try { hud.UnregisterPrompt(ref native); } catch { }
-            return;
-        }
         if (_prompt != null)
             try { Object.Destroy(_prompt.gameObject); } catch { }
-    }
-}
-
-// Drives the on-rail parser seam: finds the pooled LocalizedText the rail bound to each tracked prompt and sets
-// its `parser` to return our literal, reasserting only when the prompt (re)binds to a (possibly re-pooled) slot.
-// Touches one field on rebind — NOT a full text+glyph re-stamp every frame (the old PromptTextPump), so it is
-// strictly cheaper. Runs only while ≥1 on-rail prompt exists. NEW + UNVERIFIED-LIVE (see ScreenPrompt.ShowOnRail).
-internal static class RailParserGuard
-{
-    private static readonly System.Collections.Generic.List<ScreenPromptHandle> Tracked = new();
-    private static object _coroutine;
-
-    internal static void Track(ScreenPromptHandle h)
-    {
-        if (h == null || !h.Valid) return;
-        if (!Tracked.Contains(h)) Tracked.Add(h);
-        if (_coroutine == null) _coroutine = MelonCoroutines.Start(Pump());
-    }
-
-    internal static void Untrack(ScreenPromptHandle h) => Tracked.Remove(h);
-
-    private static System.Collections.IEnumerator Pump()
-    {
-        while (true)
-        {
-            for (int i = Tracked.Count - 1; i >= 0; i--)
-            {
-                var h = Tracked[i];
-                if (h == null || !h.Valid) { Tracked.RemoveAt(i); continue; }
-                Reassert(h);
-            }
-            if (Tracked.Count == 0) { _coroutine = null; yield break; }
-            yield return null;
-        }
-    }
-
-    // Find this handle's bound GameplayPromptUI (promptUis[i] ↔ gameplayPrompts[i], by handle id) and set its
-    // label's parser to our literal. Idempotent — assigning the same delegate each rebind is harmless; the point
-    // is to (re)apply after the rail re-pools the slot to us. Defensive throughout; never throws into the mod.
-    private static void Reassert(ScreenPromptHandle h)
-    {
-        try
-        {
-            var hud = ScreenPrompt.Hud;
-            var set = hud != null ? hud.bigGameplayPromptSet : null;
-            if (set == null) return;
-            var prompts = set.gameplayPrompts;
-            var uis = set.promptUis;
-            if (prompts == null || uis == null) return;
-
-            for (int i = 0; i < prompts.Count && i < uis.Count; i++)
-            {
-                var live = prompts[i];
-                if (live == null || live.handle.id != h.Id) continue;
-                var ui = uis[i];
-                var label = ui != null ? ui.label : null;
-                if (label == null) return;
-                var literal = h.Text;
-                // The rail's Refresh runs Get(locKey) THEN parser(resolved) → our literal (Refresh.c:37-42).
-                // parser is an Il2Cpp Func<string,string> field — convert our managed delegate (the pattern in
-                // CairnCoop/GhostRopeGesture.cs:102, CairnRoutes/EditField.cs:121).
-                label.parser = DelegateSupport.ConvertDelegate<Il2CppSystem.Func<string, string>>(
-                    (Func<string, string>)((_) => literal));
-                return;
-            }
-        }
-        catch { }
     }
 }
