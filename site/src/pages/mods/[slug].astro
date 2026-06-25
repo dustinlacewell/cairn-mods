@@ -55,7 +55,7 @@ if (hasDocs) {
         <h1 class="mono">{m.name}</h1>
         {m.kind !== "player" && <span class={`kind ${m.kind}`}>{kindLabel[m.kind]}</span>}
       </div>
-      <p class="meta dim mono">v{m.version} · {m.author}</p>
+      <p class="meta dim mono">v{m.version}</p>
       <p class="tagline">{m.tagline}</p>
 
       {m.description.map((p) => <p class="desc dim" set:html={p} />)}
@@ -122,15 +122,15 @@ if (hasDocs) {
                   {s.entries.map((e) => (
                     <div class="entry">
                       <div class="entry-head">
-                        <code class="entry-sig">{e.signature}</code>
+                        <code class="entry-sig" set:html={e.signature} />
                         {e.returns && (
                           <span class="entry-returns">
                             <span class="arrow">→</span>
-                            <code class="ret-type">{e.returns}</code>
+                            <code class="ret-type" set:html={e.returns} />
                           </span>
                         )}
                       </div>
-                      <p class="entry-desc">{e.description}</p>
+                      <p class="entry-desc" set:html={e.description} />
                       {e.params && e.params.length > 0 && (
                         <table class="param-table">
                           <tbody>
@@ -345,7 +345,7 @@ if (hasDocs) {
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--faint);
+    color: var(--dim);
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border);

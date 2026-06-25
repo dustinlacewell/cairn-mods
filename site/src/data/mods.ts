@@ -269,7 +269,7 @@ export const mods: Mod[] = [
         code: {
           lang: "csharp",
           src: `foreach (var info in Items.All)
-    MelonLogger.Msg($"{info.Name}  stored={info.StoredIn}  w={info.UnitWeight:F2}");
+    Log($"{info.Name}  {info.StoredIn}  {info.UnitWeight:F2}kg");
 
 var rope = Items.Get(InventoryItemStringIdEnum.Rope_Standard);`,
         },
@@ -322,11 +322,11 @@ var rope = Items.Get(InventoryItemStringIdEnum.Rope_Standard);`,
         code: {
           lang: "csharp",
           src: `var result = Inventory.Add(InventoryItemStringIdEnum.Food_Nuts, 3);
-if (!result.Ok) MelonLogger.Warning(result.Error);
-else MelonLogger.Msg($"Added {result.Added}");
+if (!result.Ok) LogWarning(result.Error);
+else Log($"Added {result.Added}");
 
-int count = Inventory.Count(InventoryItemStringIdEnum.Food_Nuts);
-float load = Inventory.StorageWeight(StorageType.Bag);`,
+int nuts  = Inventory.Count(InventoryItemStringIdEnum.Food_Nuts);
+float bag = Inventory.StorageWeight(StorageType.Bag);`,
         },
       },
       {
@@ -410,12 +410,12 @@ Teleport.ToZone(zone, targetPos, ok => { });`,
         ],
         code: {
           lang: "csharp",
-          src: `foreach (var world in World.Worlds())
-    foreach (var zone in World.Zones(world))
-        MelonLogger.Msg($"{world.name}/{zone.name}");
+          src: `foreach (var w in World.Worlds())
+    foreach (var z in World.Zones(w))
+        Log($"{w.name}/{z.name}");
 
-var zone = World.ResolveZone(World.Current, "01_FirstRidge");
-var owningWorld = World.WorldOf(zone);`,
+var zone   = World.ResolveZone(World.Current, "01_FirstRidge");
+var parent = World.WorldOf(zone);`,
         },
       },
       {
@@ -444,15 +444,13 @@ var owningWorld = World.WorldOf(zone);`,
         ],
         code: {
           lang: "csharp",
-          src: `if (Beats.Available)
-{
-    var beats = Beats.Snapshot();
-    foreach (var b in beats)
-        MelonLogger.Msg($"{b.Label}  @{b.Position}");
+          src: `if (!Beats.Available) return;
 
-    if (beats.Count > 0)
-        Teleport.To(beats[0].Position, _ => { });
-}`,
+var beats = Beats.Snapshot();
+foreach (var b in beats)
+    Log($"{b.Label}  @{b.Position}");
+
+Teleport.To(beats[0].Position, _ => { });`,
         },
       },
       {
@@ -551,14 +549,17 @@ var owningWorld = World.WorldOf(zone);`,
         ],
         code: {
           lang: "csharp",
-          src: `if (Screen.IsMenu)      MelonLogger.Msg($"step={Screen.MainMenuStep}");
-if (Screen.PawnSpawned) MelonLogger.Msg("live in gameplay");
+          src: `if (Screen.IsMenu)      Log($"step={Screen.MainMenuStep}");
+if (Screen.PawnSpawned) Log("live in gameplay");
 
-Screen.OnGameStateChanged += (from, to) => MelonLogger.Msg($"{from} -> {to}");
-Screen.OnMenuChanged      += menu => MelonLogger.Msg(menu?.name ?? "no menu");
-Screen.OnTransitionStarted   += () => MelonLogger.Msg("transition started");
-Screen.OnTransitionCompleted += () => MelonLogger.Msg("transition done");
-Screen.OnCanvasOpened += c => MelonLogger.Msg($"opened {c.GetType().Name}");`,
+Screen.OnGameStateChanged +=
+    (from, to) => Log($"{from} -> {to}");
+Screen.OnMenuChanged +=
+    menu => Log(menu?.name ?? "no menu");
+Screen.OnTransitionStarted   += () => Log("transition started");
+Screen.OnTransitionCompleted += () => Log("transition done");
+Screen.OnCanvasOpened +=
+    c => Log($"opened {c.GetType().Name}");`,
         },
       },
       {
@@ -608,10 +609,15 @@ Screen.OnCanvasOpened += c => MelonLogger.Msg($"opened {c.GetType().Name}");`,
         ],
         code: {
           lang: "csharp",
-          src: `var h = ScreenPrompt.Show("Open the hatch", Glyph.Action(GameAction.Interact));
+          src: `var h = ScreenPrompt.Show(
+    "Open the hatch",
+    Glyph.Action(GameAction.Interact));
 ScreenPrompt.Move(h, new Vector2(0, -120));
 
-var h2 = ScreenPrompt.Show("Confirm", Glyph.Key("e"), parent: myRow.transform);
+// inside your own layout:
+var h2 = ScreenPrompt.Show(
+    "Confirm", Glyph.Key("e"),
+    parent: myRow.transform);
 
 ScreenPrompt.SetActive(h, false);
 ScreenPrompt.Hide(h);`,
@@ -654,10 +660,14 @@ ScreenPrompt.Hide(h);`,
         ],
         code: {
           lang: "csharp",
-          src: `var h = WorldPrompt.Show(thing.transform, "Activate", Glyph.Key("e"));
+          src: `var h = WorldPrompt.Show(
+    thing.transform, "Activate", Glyph.Key("e"));
 
-var style = new WorldPromptStyle { Radius = 0.5f, FollowsAnchor = false };
-var h2 = WorldPrompt.Show(fixedAnchor, "Examine", null, style: style);
+var style = new WorldPromptStyle {
+    Radius = 0.5f, FollowsAnchor = false
+};
+var h2 = WorldPrompt.Show(
+    fixedAnchor, "Examine", null, style: style);
 
 WorldPrompt.Hide(h);`,
         },
@@ -733,12 +743,15 @@ p.Destroy();`,
         ],
         code: {
           lang: "csharp",
-          src: `var r = ReachPrompt.Show(partner.transform, "Rope up",
+          src: `var r = ReachPrompt.Show(
+    partner.transform, "Rope up",
     Glyph.Action(GameAction.Interact),
     onInteract: () => AttachRope(),
-    radius: 0.5f, localOffset: Vector3.up * 0.2f);
+    radius: 0.5f,
+    localOffset: Vector3.up * 0.2f);
 
-var r2 = ReachPrompt.Create(leverPos, "Pull", Glyph.Key("e"),
+var r2 = ReachPrompt.Create(
+    leverPos, "Pull", Glyph.Key("e"),
     onInteract: () => PullLever());
 
 r.Destroy();`,
@@ -789,7 +802,10 @@ r.Destroy();`,
 var g2 = Glyph.Key("f");
 var g3 = Glyph.Path("<Gamepad>/buttonSouth");
 
-var g4 = Glyph.Custom("MyAction", "<Keyboard>/g", "<Gamepad>/buttonWest");
+var g4 = Glyph.Custom(
+    "MyAction",
+    "<Keyboard>/g",
+    "<Gamepad>/buttonWest");
 if (g4.WasPerformedThisFrame()) DoThing();`,
         },
       },
@@ -803,14 +819,280 @@ if (g4.WasPerformedThisFrame()) DoThing();`,
     author: "ldlework",
     version: "0.1.0",
     description: [
-      "A localhost HTTP console that compiles and evals C# against the live game (Roslyn), plus scene inspection and per-instance logging. For writing mods, not playing them.",
+      "A localhost HTTP console that compiles and evals C# against the live game (<code>Roslyn</code>), plus scene inspection and per-instance logging. For writing mods, not playing them.",
+      "Built-in verbs: <code>eval</code>, <code>belay</code>, <code>find</code>, <code>inspect</code>, <code>ropes</code>, <code>renderers</code>, <code>gameplay</code>, <code>survival</code>, <code>edelweiss</code>, <code>input</code>, <code>emit</code>.",
     ],
     features: [
       "HTTP console (ports 14200–14209)",
-      "Live C# eval against the running game",
-      "Scene inspection + per-instance logs",
+      "Live C# eval — sync and async (Game.WaitFor)",
+      "Scene inspection: find, inspect, renderers, ropes, belay graph",
+      "Per-instance error log (multi-instance safe)",
+      "Synthetic gamepad input",
+      "Survival freeze and infinite edelweiss for repro loops",
     ],
     download: TODO_DOWNLOAD,
+    sections: [
+      {
+        id: "http",
+        title: "HTTP Console",
+        intro:
+          "One instance per port, probed from 14200 up. The chosen port is logged at startup. Both GET and POST are supported.",
+        entries: [
+          {
+            signature: "GET /cmd?q=<verb> [args]",
+            description:
+              "Run a console verb synchronously. Returns plain text. URL-encode spaces in args.",
+          },
+          {
+            signature: "POST /cmd?q=eval",
+            description:
+              "Body is raw C# — no URL-encoding. Preferred for multi-line scripts. The <code>q</code> query param defaults to <code>eval</code> when omitted.",
+          },
+          {
+            signature: "GET /events?since=<seq>&name=<filter>&timeout=<ms>",
+            description:
+              "Long-poll for edge events emitted by game patches or the <code>emit</code> verb. Blocks until the next event past <code>since</code> (default: now), optionally filtered by <code>name</code>, or until <code>timeout</code> ms (default <code>60000</code>). Returns one-line JSON <code>{seq,name,payload,ts}</code> or <code>{timeout:true,seq,oldest}</code>.",
+          },
+        ],
+        code: {
+          lang: "bash",
+          src: `# run a verb
+curl "http://127.0.0.1:14200/cmd?q=help"
+
+# eval multi-line C#
+curl -s -X POST "http://127.0.0.1:14200/cmd?q=eval" --data-binary @script.cs
+
+# long-poll for events
+curl "http://127.0.0.1:14200/events?since=0&name=revive-resolved"`,
+        },
+      },
+      {
+        id: "eval",
+        title: "Eval",
+        intro:
+          "Roslyn-compiled C# against the live game. All loaded assemblies are referenced. Import namespaces are pre-added: <code>System</code>, <code>UnityEngine</code>, <code>Il2Cpp</code>, <code>CairnDevTools</code>. End with <code>return &lt;expr&gt;</code> to get a value back.",
+        entries: [
+          {
+            signature: "Log(message)",
+            description: "Alias for <code>MelonLogger.Msg</code>, available in every script body.",
+            params: [{ name: "message", type: "string", description: "Text to log." }],
+          },
+          {
+            signature: "Bag",
+            returns: "Dictionary<string, object>",
+            description: "Persists between evals. Store objects in one script, read them in another.",
+          },
+        ],
+        code: {
+          lang: "csharp",
+          src: `// inline — returns the value
+return Il2Cpp.PawnManager.MCSpawned;
+
+// persist across evals
+Bag["pawn"] = UnityEngine.Object.FindObjectOfType<Il2Cpp.ClimbingV2PawnController>();
+
+// retrieve later
+var pawn = (Il2Cpp.ClimbingV2PawnController)Bag["pawn"];`,
+        },
+      },
+      {
+        id: "async-eval",
+        title: "Async Eval",
+        group: "eval",
+        intro:
+          "Scripts can <code>await Game.WaitFor</code> — the POST blocks and returns only when the script settles. Level-triggered: if the predicate is already true it completes on the next frame, so no edge is ever missed. Timeout faults with a <code>TimeoutException</code> carrying the message.",
+        entries: [
+          {
+            signature: "Game.WaitFor(predicate, timeoutMs?)",
+            returns: "Task",
+            description: "Await the first frame on which predicate is true.",
+            params: [
+              { name: "predicate", type: "Func<bool>", description: "Polled each frame on the main thread." },
+              { name: "timeoutMs", type: "int", optional: true, description: "Default 30000." },
+            ],
+          },
+          {
+            signature: "Game.WaitFor<T>(sample, done, timeoutMs?)",
+            returns: "Task<T>",
+            description: "Sample a value each frame; complete when done(value) is true. Returns the value.",
+            params: [
+              { name: "sample", type: "Func<T>", description: "Reads game state each frame." },
+              { name: "done", type: "Func<T, bool>", description: "Predicate over the sample." },
+              { name: "timeoutMs", type: "int", optional: true, description: "Default 30000." },
+            ],
+          },
+          {
+            signature: "Game.Delay(ms)",
+            returns: "Task",
+            description: "Frame-based delay. Advances in lockstep with the game (paused when the pump is).",
+            params: [{ name: "ms", type: "int", description: "Wall-clock ms to wait." }],
+          },
+          {
+            signature: "Game.NextFrame()",
+            returns: "Task",
+            description: "Yield to the next frame.",
+          },
+          {
+            signature: "Game.WaitForMenu(timeoutMs?)",
+            returns: "Task",
+            description: "Await the <code>MainMenu</code> being present.",
+          },
+          {
+            signature: "Game.WaitForGameplay(timeoutMs?)",
+            returns: "Task",
+            description: "Await the climber pawn being spawned.",
+          },
+          {
+            signature: "Game.WaitForFullyLoaded(timeoutMs?)",
+            returns: "Task",
+            description: "Await <code>loadingState == GameStarted</code> — stricter than pawn-spawned.",
+          },
+          {
+            signature: "Game.WaitForScene(name, timeoutMs?)",
+            returns: "Task",
+            description: "Await the active scene having a given name.",
+            params: [{ name: "name", type: "string", description: 'e.g. <code>CommonBaseScene</code>.' }],
+          },
+          {
+            signature: "Game.WaitForEagleEye(timeoutMs?)",
+            returns: "Task",
+            description: "Await the eagle-eye warp view being open.",
+          },
+          {
+            signature: "Game.EnterGameplay(timeoutMs?)",
+            returns: "Task<string>",
+            description:
+              'The canonical "get me into a playable game": wait for menu → continue → pawn-spawn → fully-loaded. Idempotent: returns immediately if already in gameplay.',
+          },
+          {
+            signature: "Game.Continue()",
+            returns: "string",
+            description: "Continue the most-recent save from the main menu (fires the <code>gameplay</code> verb inline).",
+          },
+          {
+            signature: "Game.Do(verb, args)",
+            returns: "string",
+            description: "Dispatch any registered console verb by name from inside a script.",
+            params: [
+              { name: "verb", type: "string", description: "Registered verb name." },
+              { name: "args", type: "string[]", description: "Argument strings." },
+            ],
+          },
+        ],
+        code: {
+          lang: "csharp",
+          src: `// drive the game to a state in one blocking POST
+return await Game.EnterGameplay();
+
+// wait for a specific object to appear
+var ui = await Game.WaitFor(
+    () => UnityEngine.Object.FindObjectOfType<Il2Cpp.EagleEyeUI>(true),
+    ui => ui != null);
+
+// frame-based timing
+await Game.Delay(500);
+await Game.NextFrame();
+
+// dispatch a registered verb from inside a script
+var result = Game.Do("survival", "on");`,
+        },
+      },
+      {
+        id: "inspection",
+        title: "Inspection",
+        intro: "Read-only scene queries. All run on the main thread and return plain text.",
+        entries: [
+          {
+            signature: "belay",
+            description:
+              "Complete connection graph for the local climber's securing rope: harness attach, rope identity/length/bounds, every holder, every part with endpoint pins, <code>LineRenderer</code> truth, climbot state, pitons, and the causal fall-distance scalars.",
+          },
+          {
+            signature: "find <name-substring>",
+            description: "Search all scene <code>Transform</code>s (including inactive) by name. Returns up to 30 matches with hierarchy paths and positions.",
+          },
+          {
+            signature: "inspect <name-or-hierarchy-path>",
+            description:
+              "Full component list for one <code>GameObject</code>: position, rotation, scale, per-component extras (rope length, renderer bounds), and child list.",
+          },
+          {
+            signature: "ropes",
+            description:
+              "Census of every <code>LogicalRope</code> in the scene: hierarchy path, active/init/visible state, length, holder count, bounds.",
+          },
+          {
+            signature: "renderers [minSpanMeters]",
+            description:
+              "Active renderers with bounds over the span threshold (default 300 m). Returns up to 25 entries.",
+            params: [
+              { name: "minSpanMeters", type: "float", optional: true, description: "Default 300." },
+            ],
+          },
+        ],
+        code: {
+          lang: "bash",
+          src: `curl "http://127.0.0.1:14200/cmd?q=belay"
+curl "http://127.0.0.1:14200/cmd?q=find Quickdraw"
+curl "http://127.0.0.1:14200/cmd?q=inspect Aava/bn_Head"
+curl "http://127.0.0.1:14200/cmd?q=ropes"
+curl "http://127.0.0.1:14200/cmd?q=renderers 10"`,
+        },
+      },
+      {
+        id: "verbs",
+        title: "Other Verbs",
+        intro: "Utility commands registered at startup.",
+        entries: [
+          {
+            signature: "gameplay",
+            description:
+              "Continue the most-recent save from the main menu (<code>MainMenu</code> → <code>CommonBaseScene</code>, ~12 s). Only works when the <code>MainMenu</code> is in the scene.",
+          },
+          {
+            signature: "survival [on|off]",
+            description:
+              "Freeze hunger, thirst, and cold so the climber doesn't starve mid-investigation. Blocks the drain at the source (<code>ClimberData.Set</code>), not just the ratio getters. Toggles when called with no argument.",
+          },
+          {
+            signature: "edelweiss [on|off]",
+            description:
+              "Make the resurrection item non-consumable so it can revive repeatedly. Useful for repro loops that drive the death→revive cycle many times. Toggles when called with no argument.",
+          },
+          {
+            signature: "input <control> <value> [...]",
+            description:
+              "Hold a synthetic gamepad control value. Drives the real Unity <code>InputSystem</code> so <code>InputAction</code> callbacks fire (hold-to-switch, chords). Controls: <code>lt</code>, <code>rt</code>, <code>lb</code>, <code>rb</code>, <code>lsx</code>, <code>lsy</code>.",
+            params: [
+              { name: "control", type: "string", description: "lt | rt | lb | rb | lsx | lsy" },
+              { name: "value", type: "float", description: "0..1" },
+            ],
+          },
+          {
+            signature: "input clear",
+            description: "Release all synthetic input and hand control back to the physical device.",
+          },
+          {
+            signature: "input state",
+            description: "Report current synthetic input values.",
+          },
+          {
+            signature: "emit <name> [payload]",
+            description:
+              "Push a named event onto the <code>EventBus</code> from outside the process. Wakes any <code>/events</code> long-poll watching that name.",
+          },
+        ],
+        code: {
+          lang: "bash",
+          src: `curl "http://127.0.0.1:14200/cmd?q=gameplay"
+curl "http://127.0.0.1:14200/cmd?q=survival on"
+curl "http://127.0.0.1:14200/cmd?q=edelweiss on"
+curl "http://127.0.0.1:14200/cmd?q=input lt 1 rt 1"
+curl "http://127.0.0.1:14200/cmd?q=input clear"
+curl "http://127.0.0.1:14200/cmd?q=emit revive-resolved ok"`,
+        },
+      },
+    ],
   },
 ];
 
