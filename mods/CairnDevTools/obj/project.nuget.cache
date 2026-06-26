@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "88JDUG6S66A=",
+  "dgSpecHash": "7PgTIZVnahU=",
   "success": true,
-  "projectFilePath": "d:\\code\\ghidra\\cairn-mp\\mods\\CairnDevTools\\CairnDevTools.csproj",
+  "projectFilePath": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnDevTools\\CairnDevTools.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dustin\\.nuget\\packages\\microsoft.codeanalysis.analyzers\\3.3.3\\microsoft.codeanalysis.analyzers.3.3.3.nupkg.sha512",
     "C:\\Users\\dustin\\.nuget\\packages\\microsoft.codeanalysis.common\\4.4.0\\microsoft.codeanalysis.common.4.4.0.nupkg.sha512",

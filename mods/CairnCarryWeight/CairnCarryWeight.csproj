@@ -9,9 +9,15 @@
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <DebugType>none</DebugType>
     <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="CairnAPI">
+      <HintPath>$(GameDir)\Mods\CairnAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <Reference Include="MelonLoader">
       <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
       <Private>false</Private>
@@ -46,6 +52,10 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

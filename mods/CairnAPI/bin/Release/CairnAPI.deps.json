@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v6.0": {
-      "CairnAPI/1.0.0": {
+      "CairnAPI/0.1.0": {
         "runtime": {
           "CairnAPI.dll": {}
         }
@@ -14,7 +14,7 @@
     }
   },
   "libraries": {
-    "CairnAPI/1.0.0": {
+    "CairnAPI/0.1.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

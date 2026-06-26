@@ -264,28 +264,40 @@ internal static class ScreenHooks
     // the method directly so we don't have to resolve the vtable offset.
     [HarmonyPatch(typeof(GameEventManager), nameof(GameEventManager.ChangeGameState))]
     [HarmonyPostfix]
-    static void OnChangeGameState(GlobalGameManager.GameState from, GlobalGameManager.GameState to)
-        => Screen.RaiseGameStateChanged(from, to);
+    static void OnChangeGameState(GlobalGameManager.GameState __0, GlobalGameManager.GameState __1)
+        => Screen.RaiseGameStateChanged(__0, __1);
 
-    // UIManager.OnMenuClosed / OnMenuStacked — the only two moments CurrentMenu changes.
+    // UIManager.OnMenuClosed(Menu menu) — menu is the one that just closed; CurrentMenu is now the
+    // underlying one (or null). Read CurrentMenu after the fact.
     [HarmonyPatch(typeof(UIManager), "OnMenuClosed")]
     [HarmonyPostfix]
     static void OnMenuClosed(UIManager __instance)
         => Screen.RaiseMenuChanged(__instance.CurrentMenu);
 
+    // UIManager.OnMenuStacked(Menu menu) — menu IS the newly-pushed menu, and CurrentMenu may not
+    // yet be updated when this postfix runs. Pass the parameter directly.
     [HarmonyPatch(typeof(UIManager), "OnMenuStacked")]
     [HarmonyPostfix]
-    static void OnMenuStacked(UIManager __instance)
-        => Screen.RaiseMenuChanged(__instance.CurrentMenu);
+    static void OnMenuStacked(Menu menu)
+        => Screen.RaiseMenuChanged(menu);
 
-    // BasicCanvasHandlerBehaviour.OnOpened / OnClosed — global canvas lifecycle events.
-    [HarmonyPatch(typeof(BasicCanvasHandlerBehaviour), "OnOpened")]
+    // UIManager.OpenMenu(Menu menu) — opens a menu without stacking; CurrentMenu may not yet reflect
+    // the new value in a postfix, so pass the parameter directly.
+    [HarmonyPatch(typeof(UIManager), "OpenMenu")]
     [HarmonyPostfix]
-    static void OnCanvasOpened(BasicCanvasHandlerBehaviour __instance)
-        => Screen.RaiseCanvasOpened(__instance);
+    static void OnOpenMenu(Menu menu)
+        => Screen.RaiseMenuChanged(menu);
 
-    [HarmonyPatch(typeof(BasicCanvasHandlerBehaviour), "OnClosed")]
+    // UIManager.PushMenu(Menu menu) — pushes a menu onto the stack; same timing issue as OpenMenu.
+    [HarmonyPatch(typeof(UIManager), "PushMenu")]
     [HarmonyPostfix]
-    static void OnCanvasClosed(BasicCanvasHandlerBehaviour __instance)
-        => Screen.RaiseCanvasClosed(__instance);
+    static void OnPushMenu(Menu menu)
+        => Screen.RaiseMenuChanged(menu);
+
+    // NOTE: BasicCanvasHandlerBehaviour.OnOpened/OnClosed are intentionally NOT patched here.
+    // Il2CppInterop patches virtual base-class methods at the vtable level; any subclass
+    // calling base.OnOpened()/OnClosed() re-enters the trampoline before managed code runs,
+    // producing an infinite loop that no ThreadStatic guard can intercept. The OnCanvasOpened
+    // and OnCanvasClosed events are kept on the Screen API surface for future use via a
+    // non-virtual hook point; for now they are never fired.
 }

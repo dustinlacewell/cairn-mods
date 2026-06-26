@@ -9,6 +9,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <DebugType>none</DebugType>
     <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1032,11 +1032,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnDevTools\\CairnDevTools.csproj",
+      "projectUniqueName": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnDevTools\\CairnDevTools.csproj",
       "projectName": "CairnDevTools",
-      "projectPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnDevTools\\CairnDevTools.csproj",
+      "projectPath": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnDevTools\\CairnDevTools.csproj",
       "packagesPath": "C:\\Users\\dustin\\.nuget\\packages\\",
-      "outputPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnDevTools\\obj\\",
+      "outputPath": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnDevTools\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

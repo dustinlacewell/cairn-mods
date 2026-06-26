@@ -1,0 +1,170 @@
+# Example: Mod Developer Community Discord Server Template
+
+roles:
+  - name: "Admin"
+    color: "#c0392b"
+    hoist: true
+    mentionable: false
+    permissions:
+      - Administrator
+
+  - name: "Moderator"
+    color: "#27ae60"
+    hoist: true
+    mentionable: true
+    permissions:
+      - KickMembers
+      - BanMembers
+      - ManageMessages
+      - ManageChannels
+      - ModerateMembers
+
+  - name: "Mod Developer"
+    color: "#2980b9"
+    hoist: true
+    mentionable: true
+    permissions:
+      - ViewChannel
+      - SendMessages
+      - ReadMessageHistory
+      - Connect
+      - Speak
+      - AttachFiles
+      - EmbedLinks
+      - UseExternalEmojis
+      - AddReactions
+
+  - name: "Member"
+    color: "#8e44ad"
+    hoist: false
+    mentionable: false
+    permissions:
+      - ViewChannel
+      - SendMessages
+      - ReadMessageHistory
+      - Connect
+      - Speak
+      - AttachFiles
+      - EmbedLinks
+      - UseExternalEmojis
+      - AddReactions
+
+  - name: "@everyone"
+    permissions:
+      - ViewChannel
+      - SendMessages
+      - ReadMessageHistory
+      - Connect
+      - Speak
+      - AttachFiles
+      - EmbedLinks
+      - UseExternalEmojis
+      - AddReactions
+
+categories:
+  - name: "START HERE"
+    channels:
+      - name: "rules"
+        type: text
+        topic: "Read the rules before posting builds, tools, or research"
+        permissions:
+          - role: "Moderator"
+            allow:
+              - SendMessages
+
+      - name: "announcements"
+        type: announcement
+        topic: "Server updates, releases, and event notices"
+        permissions:
+          - role: "Admin"
+            allow:
+              - SendMessages
+          - role: "Moderator"
+            allow:
+              - SendMessages
+
+  - name: "COMMUNITY"
+    channels:
+      - name: "general"
+        type: text
+        topic: "General discussion for modders and players"
+
+      - name: "help"
+        type: forum
+        topic: "Ask for help with tools, setup, or debugging"
+        default_sort_order: latest_activity
+        default_forum_layout: list
+        default_auto_archive_duration: 4320
+        available_tags:
+          - name: "Tooling"
+            emoji: "🛠️"
+          - name: "Bug"
+            emoji: "🐛"
+          - name: "Idea"
+            emoji: "💡"
+
+  - name: "MOD DEV"
+    channels:
+      - name: "research"
+        type: text
+        topic: "Notes, references, reverse engineering, and findings"
+        slowmode: 3
+
+      - name: "development"
+        type: text
+        topic: "Implementation work, code discussion, and technical collaboration"
+
+      - name: "show-and-tell"
+        type: text
+        topic: "Share prototypes, screenshots, demos, and progress updates"
+        slowmode: 10
+
+  - name: "CAIRN API"
+    channels:
+      - name: "cairn-api-chat"
+        type: text
+        topic: "Discussion about the Cairn API — usage, questions, feedback"
+
+      - name: "cairn-api-updates"
+        type: announcement
+        topic: "Cairn API releases, changelogs, and breaking-change notices"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
+
+  - name: "CAIRN DEVTOOLS"
+    channels:
+      - name: "cairn-devtools-chat"
+        type: text
+        topic: "Discussion about the Cairn Devtools Mod — usage, questions, feedback"
+
+      - name: "cairn-devtools-updates"
+        type: announcement
+        topic: "Cairn Devtools releases, changelogs, and breaking-change notices"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
+
+  - name: "STAFF"
+    permissions:
+      - role: "@everyone"
+        deny:
+          - ViewChannel
+      - role: "Admin"
+        allow:
+          - ViewChannel
+      - role: "Moderator"
+        allow:
+          - ViewChannel
+    channels:
+      - name: "staff-chat"
+        type: text
+        topic: "Moderation, triage, and server operations"
+
+uncategorized:
+  - name: "voice-lounge"
+    type: voice
+    bitrate: 96000
+    user_limit: 0

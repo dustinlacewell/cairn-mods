@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = CairnDevTools
-build_property.ProjectDir = d:\code\ghidra\cairn-mp\mods\CairnDevTools\
+build_property.ProjectDir = D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnDevTools\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

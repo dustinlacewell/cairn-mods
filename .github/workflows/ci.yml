@@ -56,17 +56,89 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install workmark
+        run: npm ci
+        working-directory: cairn-mods
+
       - uses: actions/download-artifact@v4
         with:
           pattern: dll-*
           merge-multiple: true
-          path: dist/
+          path: cairn-mods/dist/
+
+      - name: Assemble release notes
+        run: |
+          NOTES="cairn-mods/dist/release-notes.md"
+          > "$NOTES"
+          for f in cairn-mods/release-notes/*.md; do
+            [ -f "$f" ] && cat "$f" >> "$NOTES" && echo "" >> "$NOTES"
+          done
+          if [ ! -s "$NOTES" ]; then
+            echo "No release notes found — using auto-generated notes." > "$NOTES"
+          fi
 
       - name: Create release and upload DLLs
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.dll
-          generate_release_notes: true
+          files: cairn-mods/dist/*.dll
+          body_path: cairn-mods/dist/release-notes.md
+
+  notify-discord:
+    name: Discord announcements
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    env:
+      REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+      WEBHOOK_CAIRNAPI: ${{ secrets.DISCORD_WEBHOOK_CAIRNAPI }}
+      WEBHOOK_CAIRNDEVTOOLS: ${{ secrets.DISCORD_WEBHOOK_CAIRNDEVTOOLS }}
+      WEBHOOK_CAIRNCOOP: ${{ secrets.DISCORD_WEBHOOK_CAIRNCOOP }}
+      WEBHOOK_CAIRNROUTES: ${{ secrets.DISCORD_WEBHOOK_CAIRNROUTES }}
+      WEBHOOK_CAIRNFREEROAM: ${{ secrets.DISCORD_WEBHOOK_CAIRNFREEROAM }}
+      WEBHOOK_CAIRNFORAGE: ${{ secrets.DISCORD_WEBHOOK_CAIRNFORAGE }}
+      WEBHOOK_CAIRNCARRYWEIGHT: ${{ secrets.DISCORD_WEBHOOK_CAIRNCARRYWEIGHT }}
+      WEBHOOK_CAIRNACCESSORIES: ${{ secrets.DISCORD_WEBHOOK_CAIRNACCESSORIES }}
+      WEBHOOK_CAIRNNOCUTSCENES: ${{ secrets.DISCORD_WEBHOOK_CAIRNNOCUTSCENES }}
+      WEBHOOK_CAIRNARCHIPELAGO: ${{ secrets.DISCORD_WEBHOOK_CAIRNARCHIPELAGO }}
+      WEBHOOK_CAIRNTOOLS: ${{ secrets.DISCORD_WEBHOOK_CAIRNTOOLS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Announce published mods
+        run: |
+          announce() {
+            local MOD="$1"
+            local WEBHOOK_VAR="WEBHOOK_${MOD^^}"
+            local WEBHOOK="${!WEBHOOK_VAR}"
+            [ -z "$WEBHOOK" ] && return 0
+
+            local VERSION=$(grep -oP '(?<=<Version>)[^<]+' "mods/${MOD}/${MOD}.csproj")
+            local NOTES=$(cat "release-notes/${MOD}.md" 2>/dev/null | sed '/^## /d' | sed '/^$/d' || echo "")
+            local SLUG=$(echo "$MOD" | tr '[:upper:]' '[:lower:]')
+            local SITE_URL="http://cairn.ldlework.com/mods/${SLUG}"
+            local DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${MOD}.dll"
+
+            local BODY=$(jq -n \
+              --arg title "${MOD} v${VERSION}" \
+              --arg url "$SITE_URL" \
+              --arg desc "$NOTES" \
+              --arg dl "$DOWNLOAD_URL" \
+              --argjson color 5763719 \
+              '{embeds: [{title: $title, url: $url, color: $color, description: $desc, fields: [{name: "Download", value: ("[" + $title + ".dll](" + $dl + ")"), inline: true}]}]}')
+
+            curl -fsSL -X POST -H "Content-Type: application/json" -d "$BODY" "$WEBHOOK"
+          }
+
+          for MOD in $(jq -r '.mods[]' publish.json); do
+            announce "$MOD"
+          done
 
   deploy-site:
     name: Deploy site
@@ -85,15 +157,16 @@ jobs:
           merge-multiple: true
           path: dist/
 
-      - name: Patch download URLs
+      - name: Patch download URLs and versions
         env:
           REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
           BASE="https://github.com/${REPO}/releases/download/${TAG}"
-          echo "Patching download URLs to $BASE"
+          echo "Patching download URLs to $BASE and versions from csproj files"
           node -e "
             const fs = require('fs');
+            const path = require('path');
             const published = JSON.parse(fs.readFileSync('publish.json', 'utf8')).mods;
             const base = '$BASE';
             const slugToDll = {
@@ -113,9 +186,21 @@ jobs:
             let src = fs.readFileSync('site/src/data/mods.ts', 'utf8');
             for (const [slug, dll] of Object.entries(slugToDll)) {
               if (!publishedSet.has(slug)) continue;
+              // patch download URL
               const url = base + '/' + dll + '.dll';
-              const re = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?download:\\\\s*)TODO_DOWNLOAD', 'g');
-              src = src.replace(re, (m, pre) => pre + JSON.stringify(url));
+              const dlRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?download:\\\\s*)TODO_DOWNLOAD', 'g');
+              src = src.replace(dlRe, (m, pre) => pre + JSON.stringify(url));
+              // patch version from csproj
+              const csprojPath = path.join('mods', dll, dll + '.csproj');
+              if (fs.existsSync(csprojPath)) {
+                const csproj = fs.readFileSync(csprojPath, 'utf8');
+                const m2 = csproj.match(/<Version>(.+?)<\\/Version>/);
+                if (m2) {
+                  const version = m2[1];
+                  const verRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?version:\\\\s*)[\"\\'][^\"\\' ]+[\"\\']', 'g');
+                  src = src.replace(verRe, (m3, pre) => pre + JSON.stringify(version));
+                }
+              }
             }
             fs.writeFileSync('site/src/data/mods.ts', src);
           "

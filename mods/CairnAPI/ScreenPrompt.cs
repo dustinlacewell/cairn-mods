@@ -128,7 +128,7 @@ public static class ScreenPrompt
         rt.sizeDelta = new Vector2(305f, 40f);
 
         var le = go.AddComponent<LayoutElement>();   // report a preferred size so a parent HLG sizes+places us
-        le.preferredWidth = 305f;
+        le.preferredWidth = -1f;   // unconstrained — let ContentSizeFitter size to the text
         le.preferredHeight = 40f;
 
         var fitter = go.AddComponent<ContentSizeFitter>();   // width follows the label so longer text widens us
@@ -148,7 +148,7 @@ public static class ScreenPrompt
         tmp.color = Color.white;
         tmp.alignment = TextAlignmentOptions.Left;
         tmp.margin = new Vector4(60f, 0f, 0f, 0f);
-        tmp.enableWordWrapping = true;
+        tmp.enableWordWrapping = false;
         tmp.raycastTarget = false;
 
         var loc = root.gameObject.AddComponent<LocalizedText>();

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "TJXcLjanZ2Y=",
+  "dgSpecHash": "u1ADCnYREQo=",
   "success": true,
-  "projectFilePath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCarryWeight\\CairnCarryWeight.csproj",
+  "projectFilePath": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnCarryWeight\\CairnCarryWeight.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

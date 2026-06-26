@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using System.Globalization;
 using MelonLoader;
+using CairnAPI;
 
 [assembly: MelonInfo(typeof(CairnCarryWeight.Core), "CairnCarryWeight", "1.0.0", "dustin")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
@@ -15,34 +15,23 @@ namespace CairnCarryWeight;
 // drain by scaling the per-limb CurrentEffortCostMultiplier (the same knob the game
 // uses to make holds cost more), so weight literally becomes climbing effort.
 //
-// Weight is per-pawn, so each climber drains by their OWN bag — co-op safe, no
-// interaction with CairnCoop (which never touches stamina or inventory weight).
+// Weight is per-pawn, so each climber drains by their OWN bag — co-op safe.
 //
 // Item weights can be overridden (a true override: capacity, UI weight readout, and
-// our drain all see the new value) — see WeightOverrides below.
+// our drain all see the new value) via CairnAPI.ItemWeights.
 public class Core : MelonMod
 {
     // The drain knob is expressed as the effort multiplier at a FULL bag. Effort cost
     // scales linearly with how full the bag is:
     //   factor = 1 + (FullBagEffortMultiplier - 1) * (currentWeight / maxInventoryWeight)
     // so an empty bag is vanilla (1x) and a maxed-out bag costs FullBagEffortMultiplier.
-    // "Full" means the game's live InventoryTweakables.maxInventoryWeight (Addressable-
-    // loaded; ctor default 20), so the knob stays meaningful even if designers retune the cap.
     internal static MelonPreferences_Entry<bool> Enabled;
     internal static MelonPreferences_Entry<float> FullBagEffortMultiplier;
     internal static MelonPreferences_Entry<bool> ApplyWeightOverrides;
     internal static MelonPreferences_Entry<string> WeightOverridesRaw;
 
-    // Fallback bag capacity if the live tweakable isn't ready yet (matches the binary's
-    // InventoryTweakables..ctor default for maxInventoryWeight).
-    internal const float DefaultMaxInventoryWeight = 20f;
-
-    // itemId (InventoryItemStringIdEnum int value) -> multiplier applied to the
-    // item's vanilla weight. Parsed from WeightOverridesRaw.
-    internal static readonly Dictionary<int, float> WeightOverrides = new();
-
-    // Reverse map from enum name -> int value, built once for parsing the config.
-    private static Dictionary<string, int> nameToId;
+    // Reverse map from enum name -> int value for config parsing.
+    private static System.Collections.Generic.Dictionary<string, Il2Cpp.InventoryItemStringIdEnum> nameToId;
 
     public override void OnInitializeMelon()
     {
@@ -69,31 +58,50 @@ public class Core : MelonMod
 
         BuildNameMap();
         ReloadOverrides();
+        DrainPatch.Register();
+        BagScreen.Register();
+        RegisterModOptions();
 
         // Re-parse overrides if the user edits the cfg live.
         WeightOverridesRaw.OnEntryValueChanged.Subscribe((_, _) => ReloadOverrides());
 
         MelonLogger.Msg($"CairnCarryWeight ready (full-bag effort={FullBagEffortMultiplier.Value}x, "
-                      + $"{WeightOverrides.Count} overrides).");
+                      + $"{_overrideCount} overrides).");
     }
 
-    // Live bag capacity from the game's tweakables, falling back to the binary default
-    // until the Addressable-loaded instance is ready.
-    internal static float MaxInventoryWeight()
+    public override void OnUpdate() => BagScreen.UpdateText();
+
+    internal static int _overrideCount;
+
+    private static void RegisterModOptions()
     {
-        var tweak = Il2Cpp.InventoryTweakables.Instance;
-        if (tweak == null)
-            return DefaultMaxInventoryWeight;
-        float max = tweak.maxInventoryWeight;
-        return max > 0f ? max : DefaultMaxInventoryWeight;
+        CairnAPI.ModOptions.Register("CairnCarryWeight", new[]
+        {
+            CairnAPI.ModOption.Toggle("Enable carry-weight drain", Enabled,
+                tooltip: "Master switch. When off, bag weight has no effect on stamina."),
+
+            CairnAPI.ModOption.Slider("Full-bag effort multiplier", 1f, 5f, FullBagEffortMultiplier,
+                tooltip: "Effort cost at a completely full bag (empty bag is always 1×). "
+                       + "Linear scale between empty and full."),
+
+            CairnAPI.ModOption.Toggle("Apply item weight overrides", ApplyWeightOverrides,
+                tooltip: "Apply the per-item weight multipliers below. "
+                       + "Affects bag capacity, weight readout, and drain."),
+
+            CairnAPI.ModOption.Text("Item weight overrides", WeightOverridesRaw,
+                tooltip: "Comma-separated ITEM_ID=multiplier pairs, e.g. ITEM_PITON=2.0, ITEM_FLASK=0.5"),
+
+            CairnAPI.ModOption.Action("Reload weight overrides", ReloadOverrides,
+                tooltip: "Re-parse the overrides field above without restarting."),
+        });
     }
 
     private static void BuildNameMap()
     {
-        nameToId = new Dictionary<string, int>();
+        nameToId = new();
         foreach (var name in System.Enum.GetNames(typeof(Il2Cpp.InventoryItemStringIdEnum)))
         {
-            var val = (int)(Il2Cpp.InventoryItemStringIdEnum)
+            var val = (Il2Cpp.InventoryItemStringIdEnum)
                 System.Enum.Parse(typeof(Il2Cpp.InventoryItemStringIdEnum), name);
             nameToId[name] = val;
         }
@@ -101,7 +109,12 @@ public class Core : MelonMod
 
     private static void ReloadOverrides()
     {
-        WeightOverrides.Clear();
+        ItemWeights.ClearAll();
+        _overrideCount = 0;
+
+        if (!ApplyWeightOverrides.Value)
+            return;
+
         var raw = WeightOverridesRaw.Value;
         if (string.IsNullOrWhiteSpace(raw))
             return;
@@ -116,21 +129,22 @@ public class Core : MelonMod
             }
 
             var key = kv[0].Trim();
-            if (!nameToId.TryGetValue(key, out int id))
+            if (!nameToId.TryGetValue(key, out var id))
             {
                 MelonLogger.Warning($"Ignoring override for unknown item '{key}'.");
                 continue;
             }
-            if (!float.TryParse(kv[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float mult)
+            if (!float.TryParse(kv[1].Trim(), NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float mult)
                 || mult < 0f)
             {
                 MelonLogger.Warning($"Ignoring override for '{key}': '{kv[1].Trim()}' is not a valid multiplier.");
                 continue;
             }
 
-            WeightOverrides[id] = mult;
+            ItemWeights.Set(id, mult);
+            _overrideCount++;
         }
 
-        MelonLogger.Msg($"Loaded {WeightOverrides.Count} item weight override(s).");
+        MelonLogger.Msg($"Loaded {_overrideCount} item weight override(s).");
     }
 }

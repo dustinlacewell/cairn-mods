@@ -10,6 +10,7 @@
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <DebugType>none</DebugType>
     <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -83,6 +84,10 @@
     </Reference>
     <Reference Include="Il2CppTheGameBakers.TGBTools.Localization.Runtime">
       <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Localization.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.UI.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.UI.Runtime.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

@@ -1,0 +1,7 @@
+{
+  "name": "cairn-mods",
+  "private": true,
+  "devDependencies": {
+    "@ldlework/workmark": "latest"
+  }
+}

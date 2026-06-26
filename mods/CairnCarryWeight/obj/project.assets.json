@@ -12,13 +12,13 @@
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "0.1.0",
     "restore": {
-      "projectUniqueName": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCarryWeight\\CairnCarryWeight.csproj",
+      "projectUniqueName": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnCarryWeight\\CairnCarryWeight.csproj",
       "projectName": "CairnCarryWeight",
-      "projectPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCarryWeight\\CairnCarryWeight.csproj",
+      "projectPath": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnCarryWeight\\CairnCarryWeight.csproj",
       "packagesPath": "C:\\Users\\dustin\\.nuget\\packages\\",
-      "outputPath": "D:\\code\\ghidra\\cairn-mp\\mods\\CairnCarryWeight\\obj\\",
+      "outputPath": "D:\\code\\ghidra\\cairn-mp\\cairn-mods\\mods\\CairnCarryWeight\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

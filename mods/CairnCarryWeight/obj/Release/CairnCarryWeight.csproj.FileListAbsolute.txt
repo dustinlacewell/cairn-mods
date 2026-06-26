@@ -8,3 +8,13 @@ D:\code\ghidra\cairn-mp\mods\CairnCarryWeight\bin\Release\CairnCarryWeight.dll
 D:\code\ghidra\cairn-mp\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.dll
 D:\code\ghidra\cairn-mp\mods\CairnCarryWeight\obj\Release\refint\CairnCarryWeight.dll
 D:\code\ghidra\cairn-mp\mods\CairnCarryWeight\obj\Release\ref\CairnCarryWeight.dll
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.csproj.AssemblyReference.cache
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.GeneratedMSBuildEditorConfig.editorconfig
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.AssemblyInfoInputs.cache
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.AssemblyInfo.cs
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.csproj.CoreCompileInputs.cache
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\CairnCarryWeight.dll
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\refint\CairnCarryWeight.dll
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\bin\Release\CairnCarryWeight.deps.json
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\bin\Release\CairnCarryWeight.dll
+D:\code\ghidra\cairn-mp\cairn-mods\mods\CairnCarryWeight\obj\Release\ref\CairnCarryWeight.dll

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CairnDevTools")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ca2db549333b7240aea0f91785455d267cd90281")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b7fdc7167ad1bfa6e463e49eeac19874ee0ad41e")]
 [assembly: System.Reflection.AssemblyProductAttribute("CairnDevTools")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CairnDevTools")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

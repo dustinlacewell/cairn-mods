@@ -1,41 +1,42 @@
-using HarmonyLib;
+using CairnAPI;
 using Il2Cpp;
-using MelonLoader;
-using UnityEngine;
 
 namespace CairnCarryWeight;
 
-// The drain hook. ClimbingV2PawnLimb.CurrentEffortCostMultiplier is read per-limb,
-// per-frame and folded into how fast that limb burns stamina (vanilla: a pure
-// function of the limb's stamina ratio, ramping up as stamina runs low). We postfix
-// it to additionally scale by the climber's total carried weight, so a heavy bag
-// makes every hold cost more — exactly as if the load were extra effort.
+// Scales per-limb stamina drain speed based on how full the bag is.
 //
-// pawnController is the limb's own ClimbingV2PawnController, so CurrentInventoryWeight
-// is this climber's bag. Co-op safe: each pawn taxes only its own load.
-[HarmonyPatch(typeof(ClimbingV2PawnLimb), nameof(ClimbingV2PawnLimb.CurrentEffortCostMultiplier),
-    MethodType.Getter)]
-internal static class EffortCostMultiplierPatch
+// Uses CairnAPI.Stamina.DrainScale — a postfix on UpdateStaminaState that multiplies
+// _CurrentStaminaConsumptionSpeed after the game computes it. Only applied when a limb
+// is actually draining (speed > 0), so resting/neutral limbs are unaffected.
+//
+// Scale formula: factor = 1 + (FullBagEffortMultiplier - 1) × (currentWeight / maxBagWeight)
+//   Empty bag = 1x (vanilla drain).  Full bag = FullBagEffortMultiplier.
+//
+// Each limb reads its own pawn's inventory weight, so co-op players drain by their OWN bag.
+internal static class DrainPatch
 {
-    private static void Postfix(ClimbingV2PawnLimb __instance, ref float __result)
+    internal static void Register()
+        => Stamina.AddDrainScaleProvider("CairnCarryWeight", ComputeScale);
+
+    private static float ComputeScale(ClimbingV2PawnLimb limb)
     {
         if (!Core.Enabled.Value)
-            return;
+            return 1f;
 
-        var controller = __instance.pawnController;
+        var controller = limb?.pawnController;
         if (controller == null)
-            return;
+            return 1f;
 
         float weight = controller.CurrentInventoryWeight;
         if (weight <= 0f)
-            return;
+            return 1f;
 
-        // Linear: empty bag -> 1x, full bag (maxInventoryWeight) -> FullBagEffortMultiplier.
-        float fullness = weight / Core.MaxInventoryWeight();
+        float maxWeight = Inventory.MaxBagWeight();
+        if (maxWeight <= 0f)
+            return 1f;
+
+        float fullness = weight / maxWeight;
         float factor = 1f + (Core.FullBagEffortMultiplier.Value - 1f) * fullness;
-        if (factor < 1f)
-            factor = 1f;
-
-        __result *= factor;
+        return factor < 1f ? 1f : factor;
     }
 }
