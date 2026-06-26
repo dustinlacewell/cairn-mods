@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using Il2CppInterop.Runtime;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppTheGameBakers.Cairn.UI;
 using Il2CppTGBTools.UI;
+using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -22,10 +24,11 @@ namespace CairnAPI;
 [HarmonyPatch]
 internal static class ModOptionsHook
 {
-    private static IDisposable           _railEntry;
-    private static SettingsPageButton    _injectedSpb;
-    private static Image                 _injectedBackground;
-    private static SettingsMenu          _settingsMenu;
+    // Rail handle lives for the mod's lifetime — never disposed.
+    private static IDisposable        _railEntry;
+    private static SettingsPageButton _injectedSpb;
+    private static Image              _injectedBackground;
+    private static SettingsMenu       _settingsMenu;
 
     // Pointers of FieldUI rows belonging to our page — used by AfterOnPointerExit.
     private static readonly HashSet<IntPtr> _modPageRows = new();
@@ -45,7 +48,7 @@ internal static class ModOptionsHook
         if (_settingsMenu == null) return;
         try
         {
-            // Deactivate hover arrow + disable nav buttons (mirrors OpenSettingsPage steps 1-2)
+            // Deactivate hover arrow + disable nav buttons (mirrors OpenSettingsPage steps 1-2).
             var baz = _settingsMenu.bouncingButtons?.BouncingArrowZone;
             if (baz != null) baz.Deactivate(false);
             _settingsMenu.bouncingButtons?.Toggle(false);
@@ -54,8 +57,8 @@ internal static class ModOptionsHook
                 _settingsMenu.CloseSettingsPage(false);
 
             // Build a stub SettingsPageButton so Return()/Cancel resolves to us.
-            // settingsPage is intentionally null — Awake early-returns on null, CloseSettingsPage
-            // is guarded by our prefix below.
+            // settingsPage is intentionally null — Awake early-returns on null, and
+            // CloseSettingsPage is guarded by our prefix below.
             if (_injectedSpb == null)
             {
                 var go = new GameObject("ModsPageStub");
@@ -120,8 +123,8 @@ internal static class ModOptionsHook
 
     // CloseSettingsPage crashes when currentSettingsPageButton.settingsPage==null:
     // ToggleSettingPageButton runs unconditionally, then falls through to an abort.
-    // Prefix: when our stub is current, do cleanup and null currentSettingsPageButton
-    // so the native body hits its early-return on null.
+    // When our stub is current, do cleanup and null currentSettingsPageButton so the
+    // native body hits its early-return on null.
     [HarmonyPatch(typeof(SettingsMenu), "CloseSettingsPage")]
     [HarmonyPrefix]
     static void BeforeCloseSettingsPage(SettingsMenu __instance)
@@ -144,6 +147,8 @@ internal static class ModOptionsHook
 
     // FieldUI.OnPointerExit is a no-op in Select mode (gamepad design).
     // For our mouse-driven rows, manually deselect and reset both the slide and chevron.
+    // wasSelected is unreliable from managed code (struct-offset mismatch in the IL2Cpp
+    // reconstruction), so RefreshAnimator() must be called explicitly here.
     [HarmonyPatch(typeof(FieldUI), "OnPointerExit", typeof(PointerEventData))]
     [HarmonyPostfix]
     static void AfterOnPointerExit(FieldUI __instance)
@@ -175,11 +180,15 @@ internal static class ModOptionsHook
             {
                 Field field = opt.Type switch
                 {
-                    ModOption.Kind.Toggle => MakeToggle(opt),
-                    ModOption.Kind.Slider => MakeSlider(opt),
-                    ModOption.Kind.Action => MakeButton(opt),
-                    ModOption.Kind.Text   => new FieldInfo($"{opt.Label}: {opt.GetText?.Invoke() ?? ""}"),
-                    _                     => new FieldInfo(opt.Label),
+                    ModOption.Kind.Toggle       => MakeToggle(opt),
+                    ModOption.Kind.Slider       => MakeSlider(opt),
+                    ModOption.Kind.TextField    => MakeTextField(opt),
+                    ModOption.Kind.ListArrows   => MakeListArrows(opt),
+                    ModOption.Kind.Dropdown     => MakeDropdown(opt),
+                    ModOption.Kind.ButtonDouble => MakeButtonDouble(opt),
+                    ModOption.Kind.Action       => MakeButton(opt),
+                    ModOption.Kind.Label        => new FieldInfo(opt.Label),
+                    _                           => new FieldInfo(opt.Label),
                 };
                 list.Add(field);
             }
@@ -201,6 +210,60 @@ internal static class ModOptionsHook
         var cb = DelegateSupport.ConvertDelegate<FieldSlider.OnValueChangedDelegate>(twoArg);
         return new FieldSlider(new FieldLabel(opt.Label), opt.SliderMin, opt.SliderMax,
             false, opt.GetFloat?.Invoke() ?? 0f, cb);
+    }
+
+    private static FieldText MakeTextField(ModOption opt)
+    {
+        // OnValueChangedDelegate: void(string oldValue, string newValue)
+        System.Action<string, string> twoArg = (_, newVal) => opt.SetTextField?.Invoke(newVal);
+        var cb = DelegateSupport.ConvertDelegate<FieldText.OnValueChangedDelegate>(twoArg);
+        return new FieldText(
+            new FieldLabel(opt.Label),
+            opt.TextContentType,
+            opt.GetTextField?.Invoke() ?? "",
+            cb);
+    }
+
+    private static FieldListArrows MakeListArrows(ModOption opt)
+    {
+        var choices = opt.Choices ?? Array.Empty<string>();
+        var labels  = new Il2CppReferenceArray<FieldLabel>(choices.Length);
+        for (int i = 0; i < choices.Length; i++) labels[i] = new FieldLabel(choices[i]);
+
+        int cur = Math.Clamp(opt.GetIndex?.Invoke() ?? 0, 0, Math.Max(0, choices.Length - 1));
+
+        // OnValueChangedDelegate: void(int previousIndex, int nextIndex)
+        System.Action<int, int> twoArg = (_, newIdx) => opt.SetIndex?.Invoke(newIdx);
+        var cb = DelegateSupport.ConvertDelegate<FieldList.OnValueChangedDelegate>(twoArg);
+
+        return new FieldListArrows(new FieldLabel(opt.Label), labels, cur, cb);
+    }
+
+    private static FieldListDropdown MakeDropdown(ModOption opt)
+    {
+        var choices = opt.Choices ?? Array.Empty<string>();
+        var labels  = new Il2CppReferenceArray<FieldLabel>(choices.Length);
+        for (int i = 0; i < choices.Length; i++) labels[i] = new FieldLabel(choices[i]);
+
+        int cur = Math.Clamp(opt.GetIndex?.Invoke() ?? 0, 0, Math.Max(0, choices.Length - 1));
+
+        // OnValueChangedDelegate: void(int previousIndex, int nextIndex)
+        System.Action<int, int> twoArg = (_, newIdx) => opt.SetIndex?.Invoke(newIdx);
+        var cb = DelegateSupport.ConvertDelegate<FieldList.OnValueChangedDelegate>(twoArg);
+
+        return new FieldListDropdown(new FieldLabel(opt.Label), labels, cur, cb);
+    }
+
+    private static FieldButtonDouble MakeButtonDouble(ModOption opt)
+    {
+        var cbLeft  = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(
+            (System.Action)(() => opt.InvokeLeft?.Invoke()));
+        var cbRight = DelegateSupport.ConvertDelegate<Il2CppSystem.Action>(
+            (System.Action)(() => opt.InvokeRight?.Invoke()));
+        return new FieldButtonDouble(
+            new FieldLabel(opt.Label),
+            new FieldLabel(opt.LeftLabel),  cbLeft,  opt.LeftActive,
+            new FieldLabel(opt.RightLabel), cbRight, opt.RightActive);
     }
 
     private static FieldButton MakeButton(ModOption opt)
