@@ -49,6 +49,12 @@ roles:
       - UseExternalEmojis
       - AddReactions
 
+  - name: "Show and Tell"
+    color: "#f1c40f"
+    hoist: false
+    mentionable: true
+    permissions: []
+
   - name: "@everyone"
     permissions:
       - ViewChannel
@@ -76,6 +82,20 @@ categories:
         type: announcement
         topic: "Server updates, releases, and event notices"
         permissions:
+          - role: "Admin"
+            allow:
+              - SendMessages
+          - role: "Moderator"
+            allow:
+              - SendMessages
+
+      - name: "get-roles"
+        type: text
+        topic: "React to opt into notification roles like Show and Tell"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
           - role: "Admin"
             allow:
               - SendMessages
@@ -128,6 +148,20 @@ categories:
       - name: "cairn-api-updates"
         type: announcement
         topic: "Cairn API releases, changelogs, and breaking-change notices"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
+
+  - name: "CAIRN MOD OPTIONS"
+    channels:
+      - name: "cairn-mod-options-chat"
+        type: text
+        topic: "Discussion about the Cairn Mod Options library — usage, questions, feedback"
+
+      - name: "cairn-mod-options-updates"
+        type: announcement
+        topic: "Cairn Mod Options releases, changelogs, and breaking-change notices"
         permissions:
           - role: "@everyone"
             deny:

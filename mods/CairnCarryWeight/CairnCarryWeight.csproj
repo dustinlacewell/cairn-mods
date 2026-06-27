@@ -13,11 +13,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="CairnAPI">
-      <HintPath>$(GameDir)\Mods\CairnAPI.dll</HintPath>
+    <ProjectReference Include="..\CairnAPI\CairnAPI.csproj">
       <Private>false</Private>
-    </Reference>
+    </ProjectReference>
+    <ProjectReference Include="..\CairnModOptions\CairnModOptions.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
 
+  <ItemGroup>
     <Reference Include="MelonLoader">
       <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
       <Private>false</Private>

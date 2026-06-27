@@ -18,10 +18,9 @@
     <ProjectReference Include="..\CairnAPI\CairnAPI.csproj">
       <Private>false</Private>
     </ProjectReference>
-    <Reference Include="CrossMenuLib">
-      <HintPath>$(GameDir)\Mods\CrossMenuLib.dll</HintPath>
+    <ProjectReference Include="..\CrossMenuLib\CrossMenuLib.csproj">
       <Private>false</Private>
-    </Reference>
+    </ProjectReference>
     <Reference Include="MelonLoader">
       <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
       <Private>false</Private>

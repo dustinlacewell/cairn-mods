@@ -1,9 +1,13 @@
 name: CI
 
+# Per-mod releases in a monorepo:
+#   - PR / main / dispatch  → build every published mod (validation only)
+#   - push to main          → deploy the site (Pages rejects tag-triggered deploys, so deploy from main)
+#   - push tag <Mod>-v<X.Y.Z> → build + GitHub-release + Discord-announce ONLY that one mod
 on:
   push:
     branches: [main]
-    tags: ["v*"]
+    tags: ["*-v[0-9]*"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -14,8 +18,9 @@ permissions:
   id-token: write
 
 jobs:
-  # ── Build published mods ───────────────────────────────────────────────────
+  # ── Validate: build every published mod (PR / main / dispatch; never on tags) ──
   config:
+    if: github.ref_type != 'tag'
     name: Read publish.json
     runs-on: ubuntu-latest
     outputs:
@@ -25,7 +30,8 @@ jobs:
       - id: read
         run: echo "mods=$(jq -c '.mods' publish.json)" >> $GITHUB_OUTPUT
 
-  build-mods:
+  validate:
+    if: github.ref_type != 'tag'
     name: Build ${{ matrix.mod }}
     needs: config
     runs-on: ubuntu-latest
@@ -34,70 +40,149 @@ jobs:
         mod: ${{ fromJson(needs.config.outputs.mods) }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "6.0.x"
-
       - name: Build
-        run: dotnet build mods/${{ matrix.mod }} -c Release /p:CI=true /p:NoInstall=1 /p:GameDir="$GITHUB_WORKSPACE/game-refs"
+        run: dotnet build mods/${{ matrix.mod }} -c Release /p:CI=true /p:GameDir="$GITHUB_WORKSPACE/game-refs"
 
-      - name: Upload artifact
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
-        with:
-          name: dll-${{ matrix.mod }}
-          path: mods/${{ matrix.mod }}/bin/Release/${{ matrix.mod }}.dll
-
-  # ── Tags only: release then deploy site ───────────────────────────────────
-  release:
-    name: Publish release
-    needs: build-mods
-    if: startsWith(github.ref, 'refs/tags/v')
+  # ── Deploy site: on main push (or manual). NOT on tags — github-pages refuses tag deploys. ──
+  deploy-site:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    name: Deploy site
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
+
+      # Each published mod's download URL is derived deterministically from its csproj version,
+      # matching the per-mod release tag <Mod>-v<Version>. No global tag needed.
+      - name: Patch download URLs and versions
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const published = JSON.parse(fs.readFileSync('publish.json', 'utf8')).mods;
+            const repo = '$REPO';
+            const slugToDll = {
+              cairncoop:        'CairnCoop',
+              cairnroutes:      'CairnRoutes',
+              cairnfreeroam:    'CairnFreeRoam',
+              cairnforage:      'CairnForage',
+              cairncarryweight: 'CairnCarryWeight',
+              cairnaccessories: 'CairnAccessories',
+              cairnnocutscenes: 'CairnNoCutscenes',
+              cairnarchipelago: 'CairnArchipelago',
+              cairntools:       'CairnTools',
+              cairnapi:         'CairnAPI',
+              cairnmodoptions:  'CairnModOptions',
+              cairndevtools:    'CairnDevTools',
+            };
+            const publishedSet = new Set(published.map(d => d.toLowerCase()));
+            let src = fs.readFileSync('site/src/data/mods.ts', 'utf8');
+            for (const [slug, dll] of Object.entries(slugToDll)) {
+              if (!publishedSet.has(slug)) continue;
+              const csprojPath = path.join('mods', dll, dll + '.csproj');
+              if (!fs.existsSync(csprojPath)) continue;
+              const m2 = fs.readFileSync(csprojPath, 'utf8').match(/<Version>(.+?)<\\/Version>/);
+              if (!m2) continue;
+              const version = m2[1];
+              const url = 'https://github.com/' + repo + '/releases/download/' + dll + '-v' + version + '/' + dll + '.dll';
+              const dlRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?download:\\\\s*)TODO_DOWNLOAD', 'g');
+              src = src.replace(dlRe, (m, pre) => pre + JSON.stringify(url));
+              const verRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?version:\\\\s*)[\"\\'][^\"\\' ]+[\"\\']', 'g');
+              src = src.replace(verRe, (m3, pre) => pre + JSON.stringify(version));
+            }
+            fs.writeFileSync('site/src/data/mods.ts', src);
+          "
 
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Install workmark
+      - name: Install site deps
         run: npm ci
-        working-directory: cairn-mods
-
-      - uses: actions/download-artifact@v4
+        working-directory: site
+      - name: Build site
+        run: npm run build
+        working-directory: site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
-          pattern: dll-*
-          merge-multiple: true
-          path: cairn-mods/dist/
+          path: site/dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
 
-      - name: Assemble release notes
+  # ── Release: tag <Mod>-v<X.Y.Z> → build + release + announce ONLY that mod ──
+  parse:
+    if: github.ref_type == 'tag'
+    name: Parse release tag
+    runs-on: ubuntu-latest
+    outputs:
+      mod: ${{ steps.p.outputs.mod }}
+      version: ${{ steps.p.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
         run: |
-          NOTES="cairn-mods/dist/release-notes.md"
-          > "$NOTES"
-          for f in cairn-mods/release-notes/*.md; do
-            [ -f "$f" ] && cat "$f" >> "$NOTES" && echo "" >> "$NOTES"
-          done
-          if [ ! -s "$NOTES" ]; then
-            echo "No release notes found — using auto-generated notes." > "$NOTES"
+          TAG="${{ github.ref_name }}"
+          if [[ ! "$TAG" =~ ^([A-Za-z]+)-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::Tag '$TAG' is not a per-mod release tag (expected <Mod>-v<X.Y.Z>)"; exit 1
           fi
+          MOD="${BASH_REMATCH[1]}"; VERSION="${BASH_REMATCH[2]}"
+          test -f "mods/$MOD/$MOD.csproj" || { echo "::error::no csproj for $MOD"; exit 1; }
+          CSV=$(grep -oP '(?<=<Version>)[^<]+' "mods/$MOD/$MOD.csproj")
+          [ "$CSV" = "$VERSION" ] || { echo "::error::tag $VERSION != csproj $CSV for $MOD"; exit 1; }
+          jq -e --arg m "$MOD" '.mods | index($m)' publish.json >/dev/null || { echo "::error::$MOD not in publish.json"; exit 1; }
+          echo "mod=$MOD"         >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create release and upload DLLs
-        uses: softprops/action-gh-release@v2
+  release:
+    if: github.ref_type == 'tag'
+    name: Release ${{ needs.parse.outputs.mod }}
+    needs: parse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
-          files: cairn-mods/dist/*.dll
-          body_path: cairn-mods/dist/release-notes.md
+          dotnet-version: "6.0.x"
+      - name: Build ${{ needs.parse.outputs.mod }}
+        run: dotnet build "mods/${{ needs.parse.outputs.mod }}" -c Release /p:CI=true /p:GameDir="$GITHUB_WORKSPACE/game-refs"
+      - name: Pick release notes
+        run: |
+          MOD="${{ needs.parse.outputs.mod }}"
+          NOTES="release-notes/$MOD.md"
+          if [ ! -s "$NOTES" ]; then
+            echo "## $MOD v${{ needs.parse.outputs.version }}" > /tmp/notes.md
+            NOTES=/tmp/notes.md
+          fi
+          echo "NOTES=$NOTES" >> $GITHUB_ENV
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ needs.parse.outputs.mod }} v${{ needs.parse.outputs.version }}
+          files: mods/${{ needs.parse.outputs.mod }}/bin/Release/${{ needs.parse.outputs.mod }}.dll
+          body_path: ${{ env.NOTES }}
 
   notify-discord:
-    name: Discord announcements
-    needs: release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref_type == 'tag'
+    name: Announce ${{ needs.parse.outputs.mod }}
+    needs: [parse, release]
     runs-on: ubuntu-latest
     env:
       REPO: ${{ github.repository }}
       TAG: ${{ github.ref_name }}
+      MOD: ${{ needs.parse.outputs.mod }}
+      VERSION: ${{ needs.parse.outputs.version }}
       WEBHOOK_CAIRNAPI: ${{ secrets.DISCORD_WEBHOOK_CAIRNAPI }}
+      WEBHOOK_CAIRNMODOPTIONS: ${{ secrets.DISCORD_WEBHOOK_CAIRNMODOPTIONS }}
       WEBHOOK_CAIRNDEVTOOLS: ${{ secrets.DISCORD_WEBHOOK_CAIRNDEVTOOLS }}
       WEBHOOK_CAIRNCOOP: ${{ secrets.DISCORD_WEBHOOK_CAIRNCOOP }}
       WEBHOOK_CAIRNROUTES: ${{ secrets.DISCORD_WEBHOOK_CAIRNROUTES }}
@@ -110,118 +195,20 @@ jobs:
       WEBHOOK_CAIRNTOOLS: ${{ secrets.DISCORD_WEBHOOK_CAIRNTOOLS }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Announce published mods
+      - name: Announce
         run: |
-          announce() {
-            local MOD="$1"
-            local WEBHOOK_VAR="WEBHOOK_${MOD^^}"
-            local WEBHOOK="${!WEBHOOK_VAR}"
-            [ -z "$WEBHOOK" ] && return 0
-
-            local VERSION=$(grep -oP '(?<=<Version>)[^<]+' "mods/${MOD}/${MOD}.csproj")
-            local NOTES=$(cat "release-notes/${MOD}.md" 2>/dev/null | sed '/^## /d' | sed '/^$/d' || echo "")
-            local SLUG=$(echo "$MOD" | tr '[:upper:]' '[:lower:]')
-            local SITE_URL="http://cairn.ldlework.com/mods/${SLUG}"
-            local DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${MOD}.dll"
-
-            local BODY=$(jq -n \
-              --arg title "${MOD} v${VERSION}" \
-              --arg url "$SITE_URL" \
-              --arg desc "$NOTES" \
-              --arg dl "$DOWNLOAD_URL" \
-              --argjson color 5763719 \
-              '{embeds: [{title: $title, url: $url, color: $color, description: $desc, fields: [{name: "Download", value: ("[" + $title + ".dll](" + $dl + ")"), inline: true}]}]}')
-
-            curl -fsSL -X POST -H "Content-Type: application/json" -d "$BODY" "$WEBHOOK"
-          }
-
-          for MOD in $(jq -r '.mods[]' publish.json); do
-            announce "$MOD"
-          done
-
-  deploy-site:
-    name: Deploy site
-    needs: release
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: dll-*
-          merge-multiple: true
-          path: dist/
-
-      - name: Patch download URLs and versions
-        env:
-          REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          BASE="https://github.com/${REPO}/releases/download/${TAG}"
-          echo "Patching download URLs to $BASE and versions from csproj files"
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const published = JSON.parse(fs.readFileSync('publish.json', 'utf8')).mods;
-            const base = '$BASE';
-            const slugToDll = {
-              cairncoop:        'CairnCoop',
-              cairnroutes:      'CairnRoutes',
-              cairnfreeroam:    'CairnFreeRoam',
-              cairnforage:      'CairnForage',
-              cairncarryweight: 'CairnCarryWeight',
-              cairnaccessories: 'CairnAccessories',
-              cairnnocutscenes: 'CairnNoCutscenes',
-              cairnarchipelago: 'CairnArchipelago',
-              cairntools:       'CairnTools',
-              cairnapi:         'CairnAPI',
-              cairndevtools:    'CairnDevTools',
-            };
-            const publishedSet = new Set(published.map(d => d.toLowerCase()));
-            let src = fs.readFileSync('site/src/data/mods.ts', 'utf8');
-            for (const [slug, dll] of Object.entries(slugToDll)) {
-              if (!publishedSet.has(slug)) continue;
-              // patch download URL
-              const url = base + '/' + dll + '.dll';
-              const dlRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?download:\\\\s*)TODO_DOWNLOAD', 'g');
-              src = src.replace(dlRe, (m, pre) => pre + JSON.stringify(url));
-              // patch version from csproj
-              const csprojPath = path.join('mods', dll, dll + '.csproj');
-              if (fs.existsSync(csprojPath)) {
-                const csproj = fs.readFileSync(csprojPath, 'utf8');
-                const m2 = csproj.match(/<Version>(.+?)<\\/Version>/);
-                if (m2) {
-                  const version = m2[1];
-                  const verRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?version:\\\\s*)[\"\\'][^\"\\' ]+[\"\\']', 'g');
-                  src = src.replace(verRe, (m3, pre) => pre + JSON.stringify(version));
-                }
-              }
-            }
-            fs.writeFileSync('site/src/data/mods.ts', src);
-          "
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install site deps
-        run: npm ci
-        working-directory: site
-
-      - name: Build site
-        run: npm run build
-        working-directory: site
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/dist
-
-      - id: deploy
-        uses: actions/deploy-pages@v4
+          WEBHOOK_VAR="WEBHOOK_${MOD^^}"
+          WEBHOOK="${!WEBHOOK_VAR}"
+          [ -z "$WEBHOOK" ] && { echo "no webhook for $MOD — skipping"; exit 0; }
+          SLUG=$(echo "$MOD" | tr '[:upper:]' '[:lower:]')
+          SITE_URL="http://cairn.ldlework.com/mods/${SLUG}"
+          DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/${MOD}.dll"
+          NOTES=$(cat "release-notes/${MOD}.md" 2>/dev/null | sed '/^## /d' | sed '/^$/d' || echo "")
+          BODY=$(jq -n \
+            --arg title "${MOD} v${VERSION}" \
+            --arg url "$SITE_URL" \
+            --arg desc "$NOTES" \
+            --arg dl "$DOWNLOAD_URL" \
+            --argjson color 5763719 \
+            '{embeds: [{title: $title, url: $url, color: $color, description: $desc, fields: [{name: "Download", value: ("[" + $title + ".dll](" + $dl + ")"), inline: true}]}]}')
+          curl -fsSL -X POST -H "Content-Type: application/json" -d "$BODY" "$WEBHOOK"

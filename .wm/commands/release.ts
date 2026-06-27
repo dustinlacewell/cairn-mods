@@ -4,8 +4,9 @@ import { z } from "zod";
 import { cmd } from "@ldlework/workmark/define";
 import { ok, fail } from "@ldlework/workmark/helpers";
 
-const MODS_DIR = resolve(import.meta.dirname, "../../mods");
-const RELEASE_NOTES_DIR = resolve(import.meta.dirname, "../../release-notes");
+const ROOT = resolve(import.meta.dirname, "../..");
+const MODS_DIR = join(ROOT, "mods");
+const RELEASE_NOTES_DIR = join(ROOT, "release-notes");
 
 const KNOWN_MODS = [
   "CairnAPI", "CairnModOptions", "CairnDevTools", "CairnCoop", "CairnRoutes",
@@ -20,19 +21,30 @@ function bumpVersion(version: string, part: "patch" | "minor" | "major"): string
   return `${major}.${minor}.${patch + 1}`;
 }
 
-/** Bump a mod's version, write release notes from changelog, and clear the changelog. */
+/**
+ * Prepare a per-mod release: bump the version, write release notes from the changelog,
+ * commit those files, and create the tag `<Mod>-v<version>` — all LOCALLY.
+ *
+ * It deliberately does NOT push. Pushing the tag triggers the live build/release/Discord
+ * pipeline, so it stays a separate, deliberate step: the command prints the exact
+ * `git push` line to run once you've reviewed the commit. Nothing this command does
+ * reaches the network or is hard to undo (`git reset --hard HEAD~1 && git tag -d <tag>`).
+ */
 export default cmd({
   args: {
     mod: z.enum(KNOWN_MODS as [string, ...string[]]).describe("Mod name"),
     part: z.enum(["patch", "minor", "major"]).default("patch").describe("Version part to bump"),
   },
-  handler: ({ mod, part }) => {
+  handler: ({ mod, part }, { sh }) => {
     try {
       const modDir = join(MODS_DIR, mod);
-      if (!existsSync(modDir)) return fail(`No mod directory found for ${mod}`);
-
       const csprojPath = join(modDir, `${mod}.csproj`);
       if (!existsSync(csprojPath)) return fail(`No csproj found at ${csprojPath}`);
+
+      // Only published mods can be released — CI's parse job rejects unpublished tags.
+      const publishJson = JSON.parse(readFileSync(join(ROOT, "publish.json"), "utf-8"));
+      if (!publishJson.mods.includes(mod))
+        return fail(`${mod} is not in publish.json — add it before releasing.`);
 
       const csproj = readFileSync(csprojPath, "utf-8");
       const versionMatch = csproj.match(/<Version>(.+?)<\/Version>/);
@@ -40,34 +52,40 @@ export default cmd({
 
       const oldVersion = versionMatch[1];
       const newVersion = bumpVersion(oldVersion, part as "patch" | "minor" | "major");
+      const tag = `${mod}-v${newVersion}`;
 
       const changelogPath = join(modDir, "changelog.txt");
       const changelog = existsSync(changelogPath)
         ? readFileSync(changelogPath, "utf-8").trim()
         : "";
 
-      const updatedCsproj = csproj.replace(
-        `<Version>${oldVersion}</Version>`,
-        `<Version>${newVersion}</Version>`
-      );
-      writeFileSync(csprojPath, updatedCsproj, "utf-8");
+      // 1. Bump csproj, write notes from changelog, clear changelog.
+      writeFileSync(csprojPath,
+        csproj.replace(`<Version>${oldVersion}</Version>`, `<Version>${newVersion}</Version>`), "utf-8");
 
       mkdirSync(RELEASE_NOTES_DIR, { recursive: true });
       const notesPath = join(RELEASE_NOTES_DIR, `${mod}.md`);
-      const notes = changelog
-        ? `## ${mod} v${newVersion}\n\n${changelog}\n`
-        : `## ${mod} v${newVersion}\n`;
-      writeFileSync(notesPath, notes, "utf-8");
+      writeFileSync(notesPath,
+        changelog ? `## ${mod} v${newVersion}\n\n${changelog}\n` : `## ${mod} v${newVersion}\n`, "utf-8");
 
-      if (existsSync(changelogPath)) {
-        writeFileSync(changelogPath, "", "utf-8");
-      }
+      if (existsSync(changelogPath)) writeFileSync(changelogPath, "", "utf-8");
+
+      // 2. Commit exactly the release files and create the tag — LOCAL ONLY, no push.
+      sh([
+        `git add "mods/${mod}/${mod}.csproj" "release-notes/${mod}.md"`,
+        `git commit -m "release(${mod}): v${newVersion}"`,
+        `git tag ${tag}`,
+      ]);
 
       return ok({
         mod,
         version: { from: oldVersion, to: newVersion },
+        tag,
         notes: notesPath,
-        entries: changelog ? changelog.split("\n").length : 0,
+        committed: true,
+        pushed: false,
+        pushWith: `git push origin main ${tag}`,
+        undoWith: `git reset --hard HEAD~1 && git tag -d ${tag}`,
       });
     } catch (e) {
       return fail(e);

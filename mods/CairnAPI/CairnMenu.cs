@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using Il2CppTheGameBakers.Cairn.UI;
+using Il2CppTGBTools.UI;
 using MelonLoader;
 using UnityEngine;
 
@@ -43,6 +44,14 @@ public static class CairnMenu
             _pending.Add(new PendingEntry(label, onClick));
             return new Handle(label, onClick, this);
         }
+
+        /// <summary>
+        /// Add a rail entry that opens a managed <see cref="SettingsPage"/> — a native fieldsUI-backed
+        /// page populated from <paramref name="buildFields"/>. The returned page can swap its content
+        /// live via <see cref="SettingsPage.Refresh"/> / <see cref="SettingsPage.SetFields"/>.
+        /// </summary>
+        public SettingsPage AddPage(string label, Func<Field[]> buildFields)
+            => SettingsPages.Register(label, buildFields);
 
         internal void Remove(string label, Action onClick)
         {

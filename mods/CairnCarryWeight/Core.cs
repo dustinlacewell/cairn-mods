@@ -75,23 +75,23 @@ public class Core : MelonMod
 
     private static void RegisterModOptions()
     {
-        CairnAPI.ModOptions.Register("CairnCarryWeight", new[]
+        CairnModOptions.ModOptions.Register("CairnCarryWeight", new[]
         {
-            CairnAPI.ModOption.Toggle("Enable carry-weight drain", Enabled,
+            CairnModOptions.ModOption.Toggle("Enable carry-weight drain", Enabled,
                 tooltip: "Master switch. When off, bag weight has no effect on stamina."),
 
-            CairnAPI.ModOption.Slider("Full-bag effort multiplier", 1f, 5f, FullBagEffortMultiplier,
+            CairnModOptions.ModOption.Slider("Full-bag effort multiplier", 1f, 5f, FullBagEffortMultiplier,
                 tooltip: "Effort cost at a completely full bag (empty bag is always 1×). "
                        + "Linear scale between empty and full."),
 
-            CairnAPI.ModOption.Toggle("Apply item weight overrides", ApplyWeightOverrides,
+            CairnModOptions.ModOption.Toggle("Apply item weight overrides", ApplyWeightOverrides,
                 tooltip: "Apply the per-item weight multipliers below. "
                        + "Affects bag capacity, weight readout, and drain."),
 
-            CairnAPI.ModOption.TextField("Item weight overrides", WeightOverridesRaw,
+            CairnModOptions.ModOption.TextField("Item weight overrides", WeightOverridesRaw,
                 tooltip: "Comma-separated ITEM_ID=multiplier pairs, e.g. ITEM_PITON=2.0, ITEM_FLASK=0.5"),
 
-            CairnAPI.ModOption.Action("Reload weight overrides", ReloadOverrides,
+            CairnModOptions.ModOption.Action("Reload weight overrides", ReloadOverrides,
                 tooltip: "Re-parse the overrides field above without restarting."),
         });
     }

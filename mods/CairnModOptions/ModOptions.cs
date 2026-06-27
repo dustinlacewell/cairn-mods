@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using Il2CppTMPro;
 using MelonLoader;
 
-namespace CairnAPI;
+namespace CairnModOptions;
 
-// Registry for mod-authored settings that CairnAPI surfaces as a "Mods" page inside
-// the game's native SettingsMenu.
+// Registry for mod-authored settings that CairnModOptions surfaces as a "Mods" page inside
+// the game's native SettingsMenu. Each registered mod becomes one selectable section of the
+// page (picked via the mod-selector dropdown at the top).
 //
 // Usage:
 //   ModOptions.Register("MyMod", new[]
@@ -22,7 +23,7 @@ namespace CairnAPI;
 //   });
 //
 // Options are displayed in declaration order. Re-registering a mod replaces its option list.
-// The UI reads this registry; consumer mods never touch the UI directly.
+// The page renders this registry; consumer mods never touch the UI directly.
 public static class ModOptions
 {
     private static readonly List<ModOptionSet> _sets = new();

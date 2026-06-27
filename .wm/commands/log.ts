@@ -7,9 +7,9 @@ import { ok, fail } from "@ldlework/workmark/helpers";
 const MODS_DIR = resolve(import.meta.dirname, "../../mods");
 
 const KNOWN_MODS = [
-  "CairnAPI", "CairnDevTools", "CairnCoop", "CairnRoutes", "CairnFreeRoam",
-  "CairnForage", "CairnCarryWeight", "CairnAccessories", "CairnNoCutscenes",
-  "CairnArchipelago", "CairnTools", "CrossMenuLib",
+  "CairnAPI", "CairnModOptions", "CairnDevTools", "CairnCoop", "CairnRoutes",
+  "CairnFreeRoam", "CairnForage", "CairnCarryWeight", "CairnAccessories",
+  "CairnNoCutscenes", "CairnArchipelago", "CairnTools", "CrossMenuLib",
 ];
 
 /** Append a changelog entry for a mod. */
