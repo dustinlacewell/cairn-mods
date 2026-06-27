@@ -88,7 +88,7 @@ public class Core : MelonMod
                 tooltip: "Apply the per-item weight multipliers below. "
                        + "Affects bag capacity, weight readout, and drain."),
 
-            CairnAPI.ModOption.Text("Item weight overrides", WeightOverridesRaw,
+            CairnAPI.ModOption.TextField("Item weight overrides", WeightOverridesRaw,
                 tooltip: "Comma-separated ITEM_ID=multiplier pairs, e.g. ITEM_PITON=2.0, ITEM_FLASK=0.5"),
 
             CairnAPI.ModOption.Action("Reload weight overrides", ReloadOverrides,
