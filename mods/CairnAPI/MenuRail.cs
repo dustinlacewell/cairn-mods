@@ -40,11 +40,7 @@ internal static class MenuRail
         bg.color   = new Color(0f, 0f, 0f, 0f);
         bg.enabled = false;
 
-        var bwme = go.AddComponent<ButtonWithMoreEvents>();
-        bwme.onClick.AddListener(
-            DelegateSupport.ConvertDelegate<UnityEngine.Events.UnityAction>(onClick));
-
-        // ── Label child ───────────────────────────────────────────────────────
+        // ── Label child (created before BWME so targetGraphic can reference TMP) ──
         var labelGo = new GameObject("Label");
         labelGo.transform.SetParent(go.transform, false);
         labelGo.AddComponent<CanvasRenderer>();
@@ -56,10 +52,22 @@ internal static class MenuRail
         var tmp = labelGo.AddComponent<Il2CppTMPro.TextMeshProUGUI>();
         tmp.font      = font;
         tmp.fontSize  = 38f;
-        tmp.color     = new Color(0.784f, 0.784f, 0.784f, 1f);
+        tmp.color     = new Color(0.784f, 0.784f, 0.784f, 0.502f);
         tmp.margin    = new Vector4(32f, 0f, 0f, 0f);
         tmp.text      = label;
         tmp.alignment = Il2CppTMPro.TextAlignmentOptions.Left;
+
+        // Add ButtonWithMoreEvents while GO is inactive so OnEnable doesn't fire
+        // with transition=ColorTint and contaminate the CanvasRenderer color.
+        // Native SPB prefabs have transition=Animation baked in — we must match that
+        // before the first OnEnable, or DoStateTransition will CrossFadeColor our Image.
+        go.SetActive(false);
+        var bwme = go.AddComponent<ButtonWithMoreEvents>();
+        bwme.transition   = Selectable.Transition.Animation;
+        bwme.targetGraphic = tmp.TryCast<Graphic>();
+        bwme.onClick.AddListener(
+            DelegateSupport.ConvertDelegate<UnityEngine.Events.UnityAction>(onClick));
+        go.SetActive(true);
 
         // ── Sibling order ─────────────────────────────────────────────────────
         if (insertBefore != null)
@@ -110,7 +118,8 @@ internal static class MenuRail
         private readonly BouncingButtons      _bb;
         private readonly BouncingArrowZone    _baz;
 
-        internal Image Background { get; }
+        internal Image      Background { get; }
+        internal GameObject GO         => _go;
 
         internal Entry(
             GameObject go, ButtonWithMoreEvents bwme,
