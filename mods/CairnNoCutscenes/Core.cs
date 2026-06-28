@@ -5,7 +5,7 @@ using Il2CppTheGameBakers.Cairn.UI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CairnNoCutscenes.Core), "CairnNoCutscenes", "0.1.1", "dustin")]
+[assembly: MelonInfo(typeof(CairnNoCutscenes.Core), "CairnNoCutscenes", "0.1.2", "dustin")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
 
 namespace CairnNoCutscenes;
@@ -25,6 +25,7 @@ public class Core : MelonMod
     internal static MelonPreferences_Entry<bool> SkipOpeningTitles;
     internal static MelonPreferences_Entry<bool> SkipTitleScreen;
     internal static MelonPreferences_Entry<bool> FixStuckBlackScreen;
+    internal static MelonPreferences_Entry<bool> SkipDreamSequence;
 
     // True while a DialogStoryEvent (radio call / robot message) is playing its Ink story.
     internal static bool FastForwardDialog;
@@ -50,19 +51,21 @@ public class Core : MelonMod
     {
         var cat = MelonPreferences.CreateCategory("CairnNoCutscenes");
         SkipCutscenes = cat.CreateEntry("SkipCutscenes", true,
-            description: "Auto-skip story cutscenes the moment they start playing.");
+            description: "Skip story cutscenes.");
         SkipVideos = cat.CreateEntry("SkipVideos", true,
-            description: "Auto-skip full-screen videos (logos/movies).");
+            description: "Skip intro videos and studio logos.");
         RemoveFades = cat.CreateEntry("RemoveFades", true,
-            description: "Zero the fade-to-black durations around cutscenes so skips are instant.");
+            description: "Make transitions instant — no fade to black.");
         SkipRadioCalls = cat.CreateEntry("SkipRadioCalls", true,
-            description: "Fast-forward radio calls / robot messages (every Ink line still executes, so story state stays intact).");
+            description: "Fast-forward radio calls and robot messages.");
         SkipOpeningTitles = cat.CreateEntry("SkipOpeningTitles", true,
-            description: "Suppress the opening-titles credits sequence at the top of the first wall (logo, credits, music swell, time warp).");
+            description: "Skip the opening title sequence on the first wall.");
         SkipTitleScreen = cat.CreateEntry("SkipTitleScreen", true,
-            description: "Skip the title-screen camera fly-in and the 'press any key' gate — boot straight to the main menu.");
+            description: "Skip the title screen and go straight to the main menu.");
         FixStuckBlackScreen = cat.CreateEntry("FixStuckBlackScreen", true,
-            description: "Hide the fullscreen fade overlay when a skipped cutscene orphans it (black screen with the game running behind).");
+            description: "Automatically clear a stuck black screen if one ever appears.");
+        SkipDreamSequence = cat.CreateEntry("SkipDreamSequence", true,
+            description: "Skip the nightmare/dream sequence.");
 
         RegisterModOptions();
     }
@@ -72,25 +75,28 @@ public class Core : MelonMod
         CairnModOptions.ModOptions.Register("CairnNoCutscenes", new[]
         {
             CairnModOptions.ModOption.Toggle("Skip cutscenes", SkipCutscenes,
-                tooltip: "Auto-skip story cutscenes the moment they start playing."),
+                tooltip: "Skip story cutscenes."),
 
             CairnModOptions.ModOption.Toggle("Skip videos", SkipVideos,
-                tooltip: "Auto-skip full-screen videos (logos / movies)."),
+                tooltip: "Skip intro videos and studio logos."),
 
             CairnModOptions.ModOption.Toggle("Remove fades", RemoveFades,
-                tooltip: "Zero the fade-to-black durations around cutscenes so skips are instant."),
+                tooltip: "Make transitions instant — no fade to black."),
 
             CairnModOptions.ModOption.Toggle("Skip radio calls", SkipRadioCalls,
-                tooltip: "Fast-forward radio calls / robot messages (every line still runs, so story state stays intact)."),
+                tooltip: "Fast-forward radio calls and robot messages."),
 
             CairnModOptions.ModOption.Toggle("Skip opening titles", SkipOpeningTitles,
-                tooltip: "Suppress the opening-titles credits sequence at the top of the first wall (logo, credits, music, time warp)."),
+                tooltip: "Skip the opening title sequence on the first wall."),
 
             CairnModOptions.ModOption.Toggle("Skip title screen", SkipTitleScreen,
-                tooltip: "Skip the title-screen fly-in and the 'press any key' gate — boot straight to the main menu."),
+                tooltip: "Skip the title screen and go straight to the main menu."),
 
             CairnModOptions.ModOption.Toggle("Fix stuck black screen", FixStuckBlackScreen,
-                tooltip: "Hide the fade overlay when a skipped cutscene orphans it (black screen with the game running behind)."),
+                tooltip: "Automatically clear a stuck black screen if one ever appears."),
+
+            CairnModOptions.ModOption.Toggle("Skip nightmare/dream sequence", SkipDreamSequence,
+                tooltip: "Skip the nightmare/dream sequence."),
         });
     }
 
@@ -101,6 +107,7 @@ public class Core : MelonMod
         if (SkipTitleScreen.Value) SkipTitleScreenIfNeeded();
         if (FastForwardDialog) ClearDialogFastForwardWhenDone();
         if (FixStuckBlackScreen.Value) HideStuckBlackScreenIfNeeded();
+        if (SkipDreamSequence.Value) SkipDreamIfNeeded();
     }
 
     // On load the scene manager shows the fullscreen BlackScreen overlay and the FIRST
@@ -270,6 +277,20 @@ public class Core : MelonMod
             MelonLogger.Msg("Skipping video");
             manager.Skip();
         }
+    }
+
+    // The nightmare/dream is driven by DreamSequenceManager. Its OnDisable is
+    // byte-identical to the private Clear — the full safe teardown that unwinds
+    // weather force / culling mask / climbot display / sprite speed and fires
+    // OnExit to re-enable hidden renderers. So the surgical skip is to disable
+    // the manager GameObject, which triggers OnDisable == Clear. The call is
+    // idempotent: after disable, the singleton clears, so IsPlaying is false.
+    private static void SkipDreamIfNeeded()
+    {
+        if (!DreamSequenceManager.IsPlaying)
+            return;
+        MelonLogger.Msg("Skipping nightmare/dream sequence");
+        DreamSequenceManager.Instance.gameObject.SetActive(false);
     }
 }
 

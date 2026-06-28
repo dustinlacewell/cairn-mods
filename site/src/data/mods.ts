@@ -183,12 +183,12 @@ export const mods: Mod[] = [
     tagline: "Auto-skip cutscenes, intros, and radio calls.",
     kind: "player",
     author: "dustin",
-    version: "1.0.0",
+    version: "0.1.2",
     description: [
-      "Auto-skips cutscenes, videos, opening titles, and radio calls.",
+      "Auto-skips cutscenes, videos, opening titles, radio calls, and the nightmare sequence.",
     ],
     features: [
-      "Skip cutscenes, videos, titles, radio calls",
+      "Skip cutscenes, videos, titles, radio calls, and the nightmare sequence",
     ],
     download: TODO_DOWNLOAD,
   },

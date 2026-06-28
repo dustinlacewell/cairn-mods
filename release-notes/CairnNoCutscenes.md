@@ -1,4 +1,3 @@
-## CairnNoCutscenes v0.1.1
+## CairnNoCutscenes v0.1.2
 
-- Skip toggles are now configurable in-game on the Settings -> Mods page (CairnModOptions integration).
-- Now requires CairnAPI and CairnModOptions.
+- Added: skip the nightmare/dream sequence.
