@@ -2,6 +2,7 @@
   "mods": [
     "CairnAPI",
     "CairnModOptions",
-    "CairnDevTools"
+    "CairnDevTools",
+    "CairnCarryWeight"
   ]
 }

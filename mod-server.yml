@@ -181,6 +181,20 @@ categories:
             deny:
               - SendMessages
 
+  - name: "CAIRN CARRY WEIGHT"
+    channels:
+      - name: "cairn-carryweight-chat"
+        type: text
+        topic: "Discussion about the Cairn Carry Weight mod — usage, questions, feedback"
+
+      - name: "cairn-carryweight-updates"
+        type: announcement
+        topic: "Cairn Carry Weight releases, changelogs, and breaking-change notices"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
+
   - name: "STAFF"
     permissions:
       - role: "@everyone"
