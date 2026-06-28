@@ -57,52 +57,11 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
-    env:
-      REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
 
-      # Each published mod's download URL is derived deterministically from its csproj version,
-      # matching the per-mod release tag <Mod>-v<Version>. No global tag needed.
-      - name: Patch download URLs and versions
-        run: |
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const published = JSON.parse(fs.readFileSync('publish.json', 'utf8')).mods;
-            const repo = '$REPO';
-            const slugToDll = {
-              cairncoop:        'CairnCoop',
-              cairnroutes:      'CairnRoutes',
-              cairnfreeroam:    'CairnFreeRoam',
-              cairnforage:      'CairnForage',
-              cairncarryweight: 'CairnCarryWeight',
-              cairnaccessories: 'CairnAccessories',
-              cairnnocutscenes: 'CairnNoCutscenes',
-              cairnarchipelago: 'CairnArchipelago',
-              cairntools:       'CairnTools',
-              cairnapi:         'CairnAPI',
-              cairnmodoptions:  'CairnModOptions',
-              cairndevtools:    'CairnDevTools',
-            };
-            const publishedSet = new Set(published.map(d => d.toLowerCase()));
-            let src = fs.readFileSync('site/src/data/mods.ts', 'utf8');
-            for (const [slug, dll] of Object.entries(slugToDll)) {
-              if (!publishedSet.has(slug)) continue;
-              const csprojPath = path.join('mods', dll, dll + '.csproj');
-              if (!fs.existsSync(csprojPath)) continue;
-              const m2 = fs.readFileSync(csprojPath, 'utf8').match(/<Version>(.+?)<\\/Version>/);
-              if (!m2) continue;
-              const version = m2[1];
-              const url = 'https://github.com/' + repo + '/releases/download/' + dll + '-v' + version + '/' + dll + '.dll';
-              const dlRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?download:\\\\s*)TODO_DOWNLOAD', 'g');
-              src = src.replace(dlRe, (m, pre) => pre + JSON.stringify(url));
-              const verRe = new RegExp('(slug:\\\\s*[\"\\']' + slug + '[\"\\'][\\\\s\\\\S]{0,800}?version:\\\\s*)[\"\\'][^\"\\' ]+[\"\\']', 'g');
-              src = src.replace(verRe, (m3, pre) => pre + JSON.stringify(version));
-            }
-            fs.writeFileSync('site/src/data/mods.ts', src);
-          "
-
+      # Download URLs + versions are derived from each mod's csproj at site build time
+      # (see site/src/data/mods.ts) — no string-patching of the source here.
       - uses: actions/setup-node@v4
         with:
           node-version: "20"

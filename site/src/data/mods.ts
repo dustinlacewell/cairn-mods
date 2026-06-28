@@ -13,12 +13,21 @@ export const publishedSlugs = new Set<string>(publishConfig.mods.map((s: string)
 // mods it builds against are exactly the ones a player must also install. This keeps the site's
 // dependency list in lockstep with the real build graph, with zero hand-maintenance.
 const MODS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../../mods");
+const REPO = "dustinlacewell/cairn-mods"; // GitHub repo that hosts the per-mod release assets
+
 function requiresFromCsproj(modName: string): string[] {
   const csprojPath = resolve(MODS_DIR, modName, `${modName}.csproj`);
   if (!existsSync(csprojPath)) return [];
   const csproj = readFileSync(csprojPath, "utf8");
   return [...csproj.matchAll(/<ProjectReference\b[^>]*Include="[^"]*?([^"\\/]+)\.csproj"/g)]
     .map((m) => m[1].toLowerCase());
+}
+
+function csprojVersion(modName: string): string | null {
+  const csprojPath = resolve(MODS_DIR, modName, `${modName}.csproj`);
+  if (!existsSync(csprojPath)) return null;
+  const m = readFileSync(csprojPath, "utf8").match(/<Version>(.+?)<\/Version>/);
+  return m ? m[1] : null;
 }
 
 export type ModKind = "library" | "player" | "dev";
@@ -1273,8 +1282,17 @@ curl "http://127.0.0.1:14200/cmd?q=emit revive-resolved ok"`,
   },
 ];
 
-// Derive each mod's requires from its csproj ProjectReferences (authoritative; overrides any literal).
-for (const m of mods) m.requires = requiresFromCsproj(m.name);
+// Derive version, download URL, and requires from each mod's csproj at build time, so the site
+// never drifts from what's actually built/released (replaces a brittle CI string-patcher). The
+// download URL matches the per-mod release tag <Mod>-v<Version>; only published mods get one (others
+// keep the "coming soon" placeholder → rendered as "not released yet").
+for (const m of mods) {
+  m.requires = requiresFromCsproj(m.name);
+  const v = csprojVersion(m.name);
+  if (v) m.version = v;
+  if (v && publishedSlugs.has(m.slug))
+    m.download = `https://github.com/${REPO}/releases/download/${m.name}-v${v}/${m.name}.dll`;
+}
 
 export const kindLabel: Record<ModKind, string> = {
   player: "mod",
