@@ -139,6 +139,28 @@ categories:
         topic: "Share prototypes, screenshots, demos, and progress updates"
         slowmode: 10
 
+      - name: "mod-ideas"
+        type: forum
+        topic: "Share mod ideas and suggestions — one idea per post"
+        default_sort_order: latest_activity
+        default_forum_layout: list
+        default_auto_archive_duration: 4320
+        default_thread_rate_limit: 10
+        available_tags:
+          - name: "Gameplay"
+            emoji: "🎮"
+          - name: "Quality of Life"
+            emoji: "✨"
+          - name: "Cosmetic"
+            emoji: "🎨"
+          - name: "Tooling"
+            emoji: "🛠️"
+          - name: "Multiplayer"
+            emoji: "🤝"
+          - name: "Picked Up"
+            emoji: "✅"
+            moderated: true
+
   - name: "CAIRN API"
     channels:
       - name: "cairn-api-chat"

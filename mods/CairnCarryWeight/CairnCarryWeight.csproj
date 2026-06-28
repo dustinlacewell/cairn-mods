@@ -68,7 +68,7 @@
     </Reference>
   </ItemGroup>
 
-  <Target Name="DeployToGame" AfterTargets="Build">
+  <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">
     <Copy SourceFiles="$(OutputPath)CairnCarryWeight.dll"
           DestinationFolder="$(GameDir)\Mods"
           SkipUnchangedFiles="false" />

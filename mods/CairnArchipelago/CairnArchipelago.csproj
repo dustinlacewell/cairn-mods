@@ -60,7 +60,7 @@
   </ItemGroup>
 
   <!-- Install: mod dll into Mods, managed dependencies into UserLibs. -->
-  <Target Name="InstallToGame" AfterTargets="Build">
+  <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" />
     <Copy SourceFiles="$(OutputPath)Archipelago.MultiClient.Net.dll;$(OutputPath)Newtonsoft.Json.dll"
           DestinationFolder="$(GameDir)\UserLibs" />
