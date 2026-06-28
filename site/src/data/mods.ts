@@ -144,7 +144,9 @@ export const mods: Mod[] = [
       "Bag fullness scales climbing effort",
       "Tunable scale (default 1×–2×)",
       "Per-item weight overrides",
+      "Configurable on the in-game Mods page",
     ],
+    requires: ["cairnapi", "cairnmodoptions"],
     download: TODO_DOWNLOAD,
   },
   {
