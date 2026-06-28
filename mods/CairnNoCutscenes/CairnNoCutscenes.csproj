@@ -9,8 +9,17 @@
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
     <DebugType>none</DebugType>
     <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CairnAPI\CairnAPI.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\CairnModOptions\CairnModOptions.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
 
   <ItemGroup>
     <Reference Include="MelonLoader">
@@ -42,5 +51,9 @@
       <Private>false</Private>
     </Reference>
   </ItemGroup>
+
+  <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)\Mods" />
+  </Target>
 
 </Project>

@@ -5,7 +5,7 @@ using Il2CppTheGameBakers.Cairn.UI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CairnNoCutscenes.Core), "CairnNoCutscenes", "1.0.0", "dustin")]
+[assembly: MelonInfo(typeof(CairnNoCutscenes.Core), "CairnNoCutscenes", "0.1.1", "dustin")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
 
 namespace CairnNoCutscenes;
@@ -63,6 +63,35 @@ public class Core : MelonMod
             description: "Skip the title-screen camera fly-in and the 'press any key' gate — boot straight to the main menu.");
         FixStuckBlackScreen = cat.CreateEntry("FixStuckBlackScreen", true,
             description: "Hide the fullscreen fade overlay when a skipped cutscene orphans it (black screen with the game running behind).");
+
+        RegisterModOptions();
+    }
+
+    private static void RegisterModOptions()
+    {
+        CairnModOptions.ModOptions.Register("CairnNoCutscenes", new[]
+        {
+            CairnModOptions.ModOption.Toggle("Skip cutscenes", SkipCutscenes,
+                tooltip: "Auto-skip story cutscenes the moment they start playing."),
+
+            CairnModOptions.ModOption.Toggle("Skip videos", SkipVideos,
+                tooltip: "Auto-skip full-screen videos (logos / movies)."),
+
+            CairnModOptions.ModOption.Toggle("Remove fades", RemoveFades,
+                tooltip: "Zero the fade-to-black durations around cutscenes so skips are instant."),
+
+            CairnModOptions.ModOption.Toggle("Skip radio calls", SkipRadioCalls,
+                tooltip: "Fast-forward radio calls / robot messages (every line still runs, so story state stays intact)."),
+
+            CairnModOptions.ModOption.Toggle("Skip opening titles", SkipOpeningTitles,
+                tooltip: "Suppress the opening-titles credits sequence at the top of the first wall (logo, credits, music, time warp)."),
+
+            CairnModOptions.ModOption.Toggle("Skip title screen", SkipTitleScreen,
+                tooltip: "Skip the title-screen fly-in and the 'press any key' gate — boot straight to the main menu."),
+
+            CairnModOptions.ModOption.Toggle("Fix stuck black screen", FixStuckBlackScreen,
+                tooltip: "Hide the fade overlay when a skipped cutscene orphans it (black screen with the game running behind)."),
+        });
     }
 
     public override void OnUpdate()
