@@ -42,10 +42,12 @@ python ap/tools/extract_ap_data.py     # reads dump/dump.cs
 ## Testing generation
 
 ```
-cmd /c mklink /J D:\ext\Archipelago\worlds\cairn D:\code\ghidra\cairn-mp\ap\apworld\cairn
-cd D:\ext\Archipelago
-.\.venv\Scripts\python Generate.py --player_files_path D:\code\ghidra\cairn-mp\ap\test\Players ^
-    --outputpath D:\code\ghidra\cairn-mp\ap\test\output
+# paths below are relative to this ap/ dir (lives at cairn-mods/mods/CairnArchipelago/ap/);
+# <your-archipelago-dir> is wherever you installed Archipelago (e.g. D:\ext\Archipelago)
+cmd /c mklink /J <your-archipelago-dir>\worlds\cairn ap\apworld\cairn
+cd <your-archipelago-dir>
+.\.venv\Scripts\python Generate.py --player_files_path ap\test\Players ^
+    --outputpath ap\test\output
 ```
 
 (.venv is Python 3.13 — AP rejects 3.14 — with generation deps only, no kivy.)

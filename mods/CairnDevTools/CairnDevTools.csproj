@@ -11,7 +11,6 @@
     <!-- Copy NuGet (Roslyn) assemblies into the build output so the install target can
          stage them into the game's UserLibs. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <GameDir>P:\Steam\steamapps\common\Cairn</GameDir>
     <Version>0.1.0</Version>
   </PropertyGroup>
 

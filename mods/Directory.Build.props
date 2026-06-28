@@ -1,8 +1,16 @@
 <Project>
-  <!-- On CI, redirect GameDir to the stripped reference assemblies committed in game-refs/.
-       Locally, GameDir stays as defined in each .csproj (P:\Steam\...). -->
+  <!-- Single source of truth for GameDir, inherited by every mod .csproj (none set it themselves).
+       Resolution order:
+         1. CI            -> the stripped reference assemblies committed in game-refs/ (relative to this file).
+         2. CAIRN_GAME_DIR -> the game install named by that environment variable, if set.
+         3. fallback      -> the local Steam install.
+       Set CAIRN_GAME_DIR to build against a Cairn install at any other location. -->
   <PropertyGroup Condition="'$(CI)' == 'true'">
     <GameDir>$(MSBuildThisFileDirectory)..\game-refs</GameDir>
     <NoInstall>1</NoInstall>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(CI)' != 'true'">
+    <GameDir Condition="'$(CAIRN_GAME_DIR)' != ''">$(CAIRN_GAME_DIR)</GameDir>
+    <GameDir Condition="'$(GameDir)' == ''">P:\Steam\steamapps\common\Cairn</GameDir>
   </PropertyGroup>
 </Project>
