@@ -79,6 +79,15 @@ internal static class MenuRail
             }
         }
 
+        // ── Controller navigation ─────────────────────────────────────────────
+        // Splice the button into the rail's explicit Selectable nav chain so a CONTROLLER can
+        // reach it. The mouse path (add_OnPointerEntered → SelectOnPointerEnter, below) calls
+        // Select() directly and bypasses navigation — which is why this button was reachable by
+        // mouse but never by gamepad. The native rail buttons use Navigation.Mode.Explicit (a
+        // hand-wired up/down chain); the game wires its own runtime-built lists the same way
+        // (FreeRoamEagleEyeWarpPointListUI). So we splice ourselves into that chain.
+        LinkNavigation(parent, go.GetComponent<Selectable>());
+
         // ── BouncingButtons registration ──────────────────────────────────────
         bwme.add_OnPointerEntered(
             DelegateSupport.ConvertDelegate<Il2CppSystem.Action<ButtonWithMoreEvents>>(
@@ -107,6 +116,39 @@ internal static class MenuRail
     {
         foreach (var f in Resources.FindObjectsOfTypeAll<Il2CppTMPro.TMP_FontAsset>())
             if (f.name == name) return f;
+        return null;
+    }
+
+    // Wire the inserted button into the rail's explicit up/down Selectable chain (controller nav).
+    // Navigation is a struct, so each link is read-mutate-write.
+    private static void LinkNavigation(Transform parent, Selectable inserted)
+    {
+        if (inserted == null) return;
+        int idx  = inserted.transform.GetSiblingIndex();
+        var prev = NearestSelectable(parent, idx - 1, -1);
+        var next = NearestSelectable(parent, idx + 1, +1);
+
+        var nav          = inserted.navigation;
+        nav.mode         = Navigation.Mode.Explicit;
+        nav.selectOnUp   = prev;
+        nav.selectOnDown = next;
+        inserted.navigation = nav;
+
+        // Re-point a neighbour to us ONLY if it already uses Explicit nav (the rail's idiom),
+        // so we never convert an Automatic-nav rail and drop its left/right links.
+        if (prev != null && prev.navigation.mode == Navigation.Mode.Explicit)
+        { var p = prev.navigation; p.selectOnDown = inserted; prev.navigation = p; }
+        if (next != null && next.navigation.mode == Navigation.Mode.Explicit)
+        { var n = next.navigation; n.selectOnUp = inserted; next.navigation = n; }
+    }
+
+    private static Selectable NearestSelectable(Transform parent, int start, int step)
+    {
+        for (int i = start; i >= 0 && i < parent.childCount; i += step)
+        {
+            var s = parent.GetChild(i).GetComponent<Selectable>();
+            if (s != null) return s;
+        }
         return null;
     }
 

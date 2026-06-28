@@ -203,6 +203,11 @@ internal static class SettingsPages
                 if (insts[i] != null) page._rows.Add(insts[i].Pointer);
 
         fieldsUI.Activate();
+
+        // Anchor EventSystem focus on the first row, exactly as native OpenSettingsPage does
+        // (FindSelectable(0,false).Select()). Without a selected row inside the page, a controller
+        // has nothing to move from and can't navigate the fields.
+        fieldsUI.SelectFirst();
     }
 
     // Deferred live swap — runs Populate on the next frame so the field callback that
@@ -401,6 +406,15 @@ internal static class SettingsPages
             sm.fieldsUI?.RemoveAll();
             page._rows.Clear();
             sm.ActivateBouncingButtons();
+
+            // Native Return re-selects the page's rail button so a controller stays anchored on the
+            // rail; without it EventSystem focus is left on the now-destroyed field rows and the rail
+            // is "stuck". Must run AFTER ActivateBouncingButtons re-enables interactable — a
+            // non-interactable Selectable rejects Select(). Use the rail GO's ButtonWithMoreEvents
+            // (the SettingsPageButton's own button backing field can be lazy-null).
+            var railBtn = page._railSpb != null
+                ? page._railSpb.gameObject.GetComponent<Selectable>() : null;
+            if (railBtn != null && railBtn.interactable) railBtn.Select();
         }
         catch (Exception ex) { MelonLogger.Error($"[SettingsPage] CloseActive failed: {ex}"); }
         _active = null;
