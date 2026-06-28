@@ -153,13 +153,13 @@ categories:
             deny:
               - SendMessages
 
-  - name: "CAIRN MOD OPTIONS"
+  - name: "MOD OPTIONS"
     channels:
-      - name: "cairn-modoptions-chat"
+      - name: "modoptions-chat"
         type: text
         topic: "Discussion about the Cairn Mod Options library — usage, questions, feedback"
 
-      - name: "cairn-modoptions-updates"
+      - name: "modoptions-updates"
         type: announcement
         topic: "Cairn Mod Options releases, changelogs, and breaking-change notices"
         permissions:
@@ -167,13 +167,13 @@ categories:
             deny:
               - SendMessages
 
-  - name: "CAIRN DEVTOOLS"
+  - name: "DEVTOOLS"
     channels:
-      - name: "cairn-devtools-chat"
+      - name: "devtools-chat"
         type: text
         topic: "Discussion about the Cairn Devtools Mod — usage, questions, feedback"
 
-      - name: "cairn-devtools-updates"
+      - name: "devtools-updates"
         type: announcement
         topic: "Cairn Devtools releases, changelogs, and breaking-change notices"
         permissions:
@@ -181,13 +181,13 @@ categories:
             deny:
               - SendMessages
 
-  - name: "CAIRN CARRY WEIGHT"
+  - name: "CARRY WEIGHT"
     channels:
-      - name: "cairn-carryweight-chat"
+      - name: "carryweight-chat"
         type: text
         topic: "Discussion about the Cairn Carry Weight mod — usage, questions, feedback"
 
-      - name: "cairn-carryweight-updates"
+      - name: "carryweight-updates"
         type: announcement
         topic: "Cairn Carry Weight releases, changelogs, and breaking-change notices"
         permissions:
