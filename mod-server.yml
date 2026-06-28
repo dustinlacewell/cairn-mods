@@ -195,6 +195,20 @@ categories:
             deny:
               - SendMessages
 
+  - name: "NO CUTSCENES"
+    channels:
+      - name: "nocutscenes-chat"
+        type: text
+        topic: "Discussion about the Cairn No Cutscenes mod — usage, questions, feedback"
+
+      - name: "nocutscenes-updates"
+        type: announcement
+        topic: "Cairn No Cutscenes releases, changelogs, and breaking-change notices"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
+
   - name: "STAFF"
     permissions:
       - role: "@everyone"

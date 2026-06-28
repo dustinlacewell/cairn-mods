@@ -185,12 +185,10 @@ export const mods: Mod[] = [
     author: "dustin",
     version: "1.0.0",
     description: [
-      "Auto-skips cutscenes, videos, opening titles, and radio calls via the game's own skip pipeline. Per-feature toggles; zero fade; black-screen watchdog.",
+      "Auto-skips cutscenes, videos, opening titles, and radio calls.",
     ],
     features: [
       "Skip cutscenes, videos, titles, radio calls",
-      "Per-feature toggles",
-      "Instant (zero fade) + black-screen watchdog",
     ],
     download: TODO_DOWNLOAD,
   },
