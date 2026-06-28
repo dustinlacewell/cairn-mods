@@ -25,7 +25,9 @@ export default cmd({
       const name = line.slice(0, eq).trim();
       const value = line.slice(eq + 1).trim();
       try {
-        execRaw(`echo ${JSON.stringify(value)} | gh secret set ${name}`, {});
+        // --body sets the exact value; piping `echo` would bake in a trailing newline,
+        // which curl later rejects as "Malformed input to a URL function".
+        execRaw(`gh secret set ${name} --body ${JSON.stringify(value)}`, {});
         results.push({ name, status: "set" });
       } catch (e) {
         results.push({ name, status: `failed: ${e}` });
