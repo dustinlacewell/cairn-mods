@@ -155,11 +155,11 @@ categories:
 
   - name: "CAIRN MOD OPTIONS"
     channels:
-      - name: "cairn-mod-options-chat"
+      - name: "cairn-modoptions-chat"
         type: text
         topic: "Discussion about the Cairn Mod Options library — usage, questions, feedback"
 
-      - name: "cairn-mod-options-updates"
+      - name: "cairn-modoptions-updates"
         type: announcement
         topic: "Cairn Mod Options releases, changelogs, and breaking-change notices"
         permissions:
