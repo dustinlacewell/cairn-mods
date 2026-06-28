@@ -27,7 +27,7 @@ internal static class ModsPage
     {
         var sets = ModOptions.Sets;
         if (sets.Count == 0)
-            return new Field[] { Fields.Info("No mods have registered options.") };
+            return new Field[] { Fields.Info("No installed mods provide options.") };
 
         _selected = Math.Clamp(_selected, 0, sets.Count - 1);
 
