@@ -276,18 +276,46 @@ internal static class DialogHudPatch
 // trigger sets GameDataManager.inCreditsSequence, and CoreCreditsHud /
 // CoreCreditsTimeScaler / music all key off that flag. The HUD itself clears the
 // flag when the last credit fades, so never raising it leaves nothing waiting.
+//
+// One CreditsTrigger type and one inCreditsSequence flag serve BOTH the opening
+// titles (top of the first wall) AND the in-world end credits (post-summit stars
+// climb), so suppressing them unconditionally would also blank the legitimate end
+// credits. The discriminator is GameDataManager.InEndGame: it is false through the
+// whole opening (isInEndGame starts false and is only raised when the end-game /
+// summit transition cutscene STOPS, in CutsceneStoryEvent.OnCutsceneStop), and
+// true throughout the post-summit segment that fires the end credits. So we only
+// suppress while NOT in the end game.
+internal static class OpeningTitles
+{
+    // Suppress the credits machinery only for the opening occurrence: option on
+    // AND we are not in the end-game / summit-end segment. Fail-open (do not
+    // suppress) if the singleton isn't ready, so we never block the end credits.
+    internal static bool ShouldSuppress()
+    {
+        if (!Core.SkipOpeningTitles.Value)
+            return false;
+        try
+        {
+            if (!GameDataManager.IsReady)
+                return false;
+            return !GameDataManager.Instance.InEndGame;
+        }
+        catch { return false; }
+    }
+}
+
 [HarmonyPatch(typeof(CreditsTrigger), "OnTriggerEntered")]
 internal static class CreditsTriggerPatch
 {
-    private static bool Prefix() => !Core.SkipOpeningTitles.Value;
+    private static bool Prefix() => !OpeningTitles.ShouldSuppress();
 }
 
 // Backstop for any other caller (e.g. the debug-menu toggle): allow clearing,
-// block raising.
+// block raising — but only during the opening, never during the end credits.
 [HarmonyPatch(typeof(GameDataManager), nameof(GameDataManager.SetInCreditsSequence))]
 internal static class GameDataManagerPatch
 {
-    private static bool Prefix(bool set) => !(set && Core.SkipOpeningTitles.Value);
+    private static bool Prefix(bool set) => !(set && OpeningTitles.ShouldSuppress());
 }
 
 // Best-effort companion to Core.SkipTitleScreenIfNeeded: when a step change

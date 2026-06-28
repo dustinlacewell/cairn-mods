@@ -3,6 +3,7 @@
     "CairnAPI",
     "CairnModOptions",
     "CairnDevTools",
-    "CairnCarryWeight"
+    "CairnCarryWeight",
+    "CairnNoCutscenes"
   ]
 }
