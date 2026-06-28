@@ -3,8 +3,23 @@
 //
 // CrossMenuLib is intentionally absent: its capabilities are folding into CairnAPI.
 //
+import { readFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
 import publishConfig from "../../../publish.json";
 export const publishedSlugs = new Set<string>(publishConfig.mods.map((s: string) => s.toLowerCase()));
+
+// A mod's required mods are derived from its csproj <ProjectReference> entries — the in-repo sibling
+// mods it builds against are exactly the ones a player must also install. This keeps the site's
+// dependency list in lockstep with the real build graph, with zero hand-maintenance.
+const MODS_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../../mods");
+function requiresFromCsproj(modName: string): string[] {
+  const csprojPath = resolve(MODS_DIR, modName, `${modName}.csproj`);
+  if (!existsSync(csprojPath)) return [];
+  const csproj = readFileSync(csprojPath, "utf8");
+  return [...csproj.matchAll(/<ProjectReference\b[^>]*Include="[^"]*?([^"\\/]+)\.csproj"/g)]
+    .map((m) => m[1].toLowerCase());
+}
 
 export type ModKind = "library" | "player" | "dev";
 
@@ -71,7 +86,6 @@ export const mods: Mod[] = [
       { key: "F4", does: "co-op panel" },
       { key: "LT+RT", does: "connect / disconnect rope" },
     ],
-    requires: ["cairnapi"],
     download: TODO_DOWNLOAD,
   },
   {
@@ -91,7 +105,6 @@ export const mods: Mod[] = [
       "Teleport to a route's start",
     ],
     bindings: [{ key: "F8", does: "routes window" }],
-    requires: ["cairnapi"],
     download: TODO_DOWNLOAD,
   },
   {
@@ -127,7 +140,6 @@ export const mods: Mod[] = [
       "Effect applied, item despawns",
     ],
     bindings: [{ key: "G", does: "consume prompted item" }],
-    requires: ["cairnapi"],
     download: TODO_DOWNLOAD,
   },
   {
@@ -146,7 +158,6 @@ export const mods: Mod[] = [
       "Per-item weight overrides",
       "Configurable on the in-game Mods page",
     ],
-    requires: ["cairnapi", "cairnmodoptions"],
     download: TODO_DOWNLOAD,
   },
   {
@@ -212,7 +223,6 @@ export const mods: Mod[] = [
     ],
     features: ["Spawn any item", "Optionally unlock the backpack mid-climb"],
     bindings: [{ key: "F9", does: "item window" }],
-    requires: ["cairnapi"],
     download: TODO_DOWNLOAD,
   },
 
@@ -831,7 +841,6 @@ if (g4.WasPerformedThisFrame()) DoThing();`,
       "Back each option with a MelonPreferences entry or your own get/set",
       "Changes apply and persist the moment the player makes them",
     ],
-    requires: ["cairnapi"],
     download: TODO_DOWNLOAD,
     sections: [
       {
@@ -1263,6 +1272,9 @@ curl "http://127.0.0.1:14200/cmd?q=emit revive-resolved ok"`,
     ],
   },
 ];
+
+// Derive each mod's requires from its csproj ProjectReferences (authoritative; overrides any literal).
+for (const m of mods) m.requires = requiresFromCsproj(m.name);
 
 export const kindLabel: Record<ModKind, string> = {
   player: "mod",
