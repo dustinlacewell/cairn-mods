@@ -3,6 +3,7 @@
   "gameDomain": "cairn",
   "mods": {
     "CairnAPI": { "modId": 21, "fileId": "7592012" },
-    "CairnModOptions": { "modId": 22, "fileId": "7592096" }
+    "CairnModOptions": { "modId": 22, "fileId": "7592096" },
+    "CairnDevTools": { "modId": 23, "fileId": "7598174" }
   }
 }
