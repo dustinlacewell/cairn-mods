@@ -32,7 +32,7 @@ The driver only orchestrates; the belay logic and its state live in `PartnerBela
 
 | File | Responsibility |
 |---|---|
-| `Core.cs` | MelonMod entry, F4 panel, role/session control (Host/Joiner/LocalJoiner), Steam/UDP transport plumbing, **`IModChannel` router** for mutual-rope, the CrossMenu rope wedge registration. |
+| `Core.cs` | MelonMod entry, F4 panel, role/session control (Host/Joiner/LocalJoiner), Steam/UDP transport plumbing, **`IModChannel` router** for mutual-rope, and wiring of the diegetic ghost-reach rope gesture. |
 | `GameDriver.cs` | The netplay **state machine** (`Stage` enum + `TickInner`): build client, register, join the room **only once the climber pawn has spawned**, then the 1 Hz in-room tick that delegates to `PartnerBelay` + `SceneHygiene`. Also `DescribeGameState` (the diagnostic dump) and the tweakables/clientState field-poking. |
 | `PartnerBelay.cs` | **The belay system.** Resolve the closest partner from the roster, create/keep/tear-down a quickdraw anchor at the partner's frame position on the personal rope, reel the rope length, latch the fall length at fall entry, and the **mutual-rope** toggle (announce + reciprocate via `IModChannel`). Owns all `_partnerAnchor*`/fall-latch state. |
 | `BelayRig.cs` | Drives the **game's climbot belay** using its own verbs (`SetSecureClimber`), re-pins the quickdraw-split rope ends, sets the climbot's `idleRopeLength` (the real length authority), keeps the bot near the pawn. Also `SharedRopeInitGate` (Harmony on `SharedRopeGamemode.Init`) and `RopeLengthGuard` (Harmony on `SetLengthSafe`). |
@@ -152,8 +152,8 @@ mirrors without re-announcing → no ping-pong.
   while the rope renders into the floor or the other side is broken.
 - The local-joiner's game talks **directly** to the relay (`127.0.0.2:14000`) — the mod cannot intercept
   its inbound game traffic. That's why mod-rope needs the `ModLoopback` for local testing.
-- `[MelonOptionalDependencies("CairnAPI")]` orders the load; the rope wedge registration is guarded
-  so a missing CairnAPI only logs, never throws.
+- `[MelonOptionalDependencies("CairnAPI")]` orders the load so CairnAPI's UI layer is ready before
+  CairnCoop builds its HUDs.
 
 ## Documentation index
 
@@ -164,5 +164,4 @@ mirrors without re-announcing → no ping-pong.
 | `re/systems/climbot/rope-length.md` | The climbot's `idleRopeLength` is the real length authority (bypasses `SetLengthSafe`). |
 | `re/systems/climber/secured-falling.md` | The SecuredFalling recovery surface (auto-exit to hang-idle). |
 | `re/systems/netplay/wire-protocol.md`, `re/systems/netplay/netplay-internals.md` | The native netplay wire protocol the relay reimplements. |
-| `re/systems/ui/crossmenu/crossmenu-internals.md` | The CrossMenu the rope wedge plugs into (subsystem in `mods/CairnAPI/`, façade `CairnAPI.CrossMenu`). |
 | `docs/cairn-devtools.md` | The live-interrogation console (the `belay` command, eval). |

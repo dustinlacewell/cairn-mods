@@ -126,28 +126,26 @@ internal static class GhostRopeGesture
 
     // ── The injected interaction's closures ──────────────────────────────────────────────────────────────
 
-    /// <summary>Availability: a real partner ghost surfaces the prompt ONLY when there's a connect action to
-    /// offer — i.e. we are NOT already connected to them. The gesture is connect-only (request / accept);
-    /// unrope moved to the LT+RT wedge (<see cref="RopeWedge"/>), so a connected ghost shows nothing. The
-    /// reach/range gating is still the stock sensor path (the prompt only displays when in reach, via the
-    /// colliders[] arm); this just suppresses it once the rope exists.</summary>
+    /// <summary>Availability: a real partner ghost always surfaces a rope action when reached — CONNECT when we
+    /// are not yet roped to them (request / accept), or DETACH when we already are. The verb shown and dispatched
+    /// keys on the handshake state for that ghost's id (see <see cref="LabelKey"/> / <see cref="OnInteract"/>).
+    /// The reach/range gating is still the stock sensor path (the prompt only displays when in reach, via the
+    /// colliders[] arm); this just confirms it's a real partner.</summary>
     private static bool ReachRule()
     {
         try
         {
             var p = _current;
-            if (p == null || p.netPlayerId == 0)
-                return false;
-            var hs = Handshake;
-            return hs == null || !hs.IsConnected(p.netPlayerId); // no prompt once connected — unrope is the wedge's job
+            return p != null && p.netPlayerId != 0; // any reached real partner offers a rope action (connect or detach)
         }
         catch { return false; }
     }
 
-    /// <summary>The press: pick the CONNECT verb from the ghost's state and dispatch it — INCOMING request from
-    /// them → Accept; otherwise → SendRequest. Connect-only: there is no disconnect here (unrope is the LT+RT
-    /// wedge). A press on an already-connected ghost is a no-op (ReachRule suppresses the prompt anyway). Never
-    /// fires the native attach. Runs on the main thread (the input dispatch), where handshake state is read.</summary>
+    /// <summary>The press: pick the verb from the ghost's handshake state and dispatch it — CONNECTED → Disconnect
+    /// (unrope this partner), INCOMING request from them → Accept, otherwise → SendRequest. Diegetic and
+    /// per-partner: detaching here drops only the reached partner's rope (<see cref="RopeHandshake.Disconnect"/>,
+    /// the per-partner equivalent of unrope-all for the 2-player case). Never fires the native attach. Runs on the
+    /// main thread (the input dispatch), where handshake state is read.</summary>
     private static void OnInteract()
     {
         try
@@ -158,8 +156,11 @@ internal static class GhostRopeGesture
                 return;
             LastPressTargetId = id;
             if (hs.IsConnected(id))
-                return; // already roped — unrope is the wedge's job, not the ghost gesture
-            if (hs.HasIncoming(id))
+            {
+                hs.Disconnect(id);
+                Log?.Invoke($"gesture: PRESS → detach rope from #{id}");
+            }
+            else if (hs.HasIncoming(id))
             {
                 hs.Accept(id);
                 Log?.Invoke($"gesture: PRESS → accept rope from #{id}");

@@ -12,7 +12,7 @@ transport (a reimplementation of the studio's relay) over Steam datagrams or loc
 ## Install
 
 1. Install [MelonLoader](https://melonloader.co/) for Cairn (net6).
-2. Install **[CairnAPI](../CairnAPI/)** — CairnCoop's rope toggle lives on its CrossMenu radial menu.
+2. Install **[CairnAPI](../CairnAPI/)** — CairnCoop renders its on-screen co-op displays through it.
 3. Drop `CairnCoop.dll` in `Cairn/Mods/`. (Building from source auto-installs it — see DEVELOPERS.md.)
 
 Load order is handled automatically (`[MelonOptionalDependencies("CairnAPI")]`).
@@ -23,10 +23,10 @@ Load order is handled automatically (`[MelonOptionalDependencies("CairnAPI")]`).
 - **Host**: click *Host co-op*. **Join**: a friend running the mod and hosting appears under
   *Friends hosting co-op* — click to join. Be **on a mountain** when you host/join; remote climbers
   spawn into your level.
-- **Rope to your partner**: hold **LT + RT** and flick the wheel **UP**. This connects your belay
-  rope to the **closest** remote player. Roping is **mutual** — when you connect, your partner's
-  rope connects back automatically; either of you flicking up again disconnects both.
-  - The wedge is **greyed out** when no partner is in range.
+- **Rope to your partner**: **reach** your partner — a prompt appears on them to attach the rope.
+  Reach a partner you sent a request to, or who sent you one, to confirm it; reach a partner you're
+  already roped to and the prompt offers to **detach**.
+  - A prompt only shows when a partner is **within reach**.
   - The rope is **off by default** — you connect it on demand, you are not auto-roped.
 - **F10** — recover a stuck black screen / frozen camera (rare focus-juggling artifact).
 

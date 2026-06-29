@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 
 [assembly: MelonInfo(typeof(CairnCoop.Core), "CairnCoop", "0.2.0", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
-// Load CairnAPI first: the rope connect/disconnect action lives on its CrossMenu LT+RT wheel.
+// Load CairnAPI first: CairnCoop renders its HUDs through the CairnAPI UI layer.
 [assembly: MelonOptionalDependencies("CairnAPI")]
 
 namespace CairnCoop;
@@ -72,8 +72,7 @@ public class Core : MelonMod
         // NOTE: the revive-era instrumentation (RecorderTrace / ReviveSyncTrace / RewindCoroutineInstr) is no
         // longer installed here — it patched per-frame SpendTime and flooded the log. Re-add behind a debug
         // flag if/when working the revive path again (the classes remain; only the Install calls were removed).
-        GhostRopeGesture.Install(HarmonyInstance); // ghost colliders[] arm + UpdateProvider interaction inject (request/accept)
-        RopeWedge.Register(_driver, _log.Log);
+        GhostRopeGesture.Install(HarmonyInstance); // ghost colliders[] arm + UpdateProvider interaction inject (reach a partner to attach/detach)
 
         _panel = new CoopPanel(_driver, _session, _log.Tail);
 
@@ -184,7 +183,7 @@ public class Core : MelonMod
                 _panel.Visible = !_panel.Visible;
             if (Keyboard.current.f10Key.wasPressedThisFrame)
                 ForceUnfreeze();
-            // Rope connect/disconnect is the LT+RT up-wedge (CrossMenu), not a key.
+            // Rope connect/disconnect is diegetic: reach a partner's ghost to attach or detach — not a key.
         }
 
         // Run side-effects the network thread marshalled over (rope-state apply, rendezvous PeerSeen).
