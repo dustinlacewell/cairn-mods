@@ -130,6 +130,36 @@ jobs:
           files: mods/${{ needs.parse.outputs.mod }}/bin/Release/${{ needs.parse.outputs.mod }}.dll
           body_path: ${{ env.NOTES }}
 
+      # ── Publish to Nexus Mods (only if the mod has a fileId in nexus.json) ──
+      # Nexus accepts .zip only, so the built DLL is zipped first. The upload uses
+      # Nexus's own action (SHA-pinned — it receives NEXUS_API_KEY) which owns the
+      # multipart/presigned-S3 dance. archive_existing_version retires the prior file.
+      - name: Resolve Nexus file id
+        id: nexus
+        run: echo "file_id=$(jq -r --arg m "${{ needs.parse.outputs.mod }}" '.mods[$m].fileId // empty' nexus.json)" >> "$GITHUB_OUTPUT"
+      - name: Read release notes for Nexus
+        if: steps.nexus.outputs.file_id != ''
+        id: nexusnotes
+        run: |
+          # Same notes as the GitHub release / Discord embed, header line stripped.
+          { echo "text<<__NOTES_EOF__"; sed '/^## /d' "${{ env.NOTES }}"; echo "__NOTES_EOF__"; } >> "$GITHUB_OUTPUT"
+      - name: Package Nexus zip
+        if: steps.nexus.outputs.file_id != ''
+        run: |
+          MOD="${{ needs.parse.outputs.mod }}"; V="${{ needs.parse.outputs.version }}"
+          ( cd "mods/$MOD/bin/Release" && zip -j "$GITHUB_WORKSPACE/$MOD-$V.zip" "$MOD.dll" )
+      - name: Upload to Nexus Mods
+        if: steps.nexus.outputs.file_id != ''
+        uses: Nexus-Mods/upload-action@f6e1e2ea683dfe8f88cccf642c6e0e69ab66825e # v1.0.0-beta.8
+        with:
+          api_key: ${{ secrets.NEXUS_API_KEY }}
+          file_id: ${{ steps.nexus.outputs.file_id }}
+          filename: ${{ needs.parse.outputs.mod }}-${{ needs.parse.outputs.version }}.zip
+          display_name: ${{ needs.parse.outputs.mod }}
+          description: ${{ steps.nexusnotes.outputs.text }}
+          version: ${{ needs.parse.outputs.version }}
+          archive_existing_version: true
+
   notify-discord:
     if: github.ref_type == 'tag'
     name: Announce ${{ needs.parse.outputs.mod }}

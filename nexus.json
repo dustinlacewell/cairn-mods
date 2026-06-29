@@ -1,0 +1,8 @@
+{
+  "_comment": "Per-mod Nexus page mapping, read by CI on release. modId is the numeric id in the page URL (nexusmods.com/cairn/mods/<modId>); fileId is the v3 mod-file id the new version attaches to (GET /v3/mods/<uuid>/files). A mod without a fileId entry is skipped by the Nexus upload step.",
+  "gameDomain": "cairn",
+  "mods": {
+    "CairnAPI": { "modId": 21, "fileId": "7592012" },
+    "CairnModOptions": { "modId": 22, "fileId": "7592096" }
+  }
+}

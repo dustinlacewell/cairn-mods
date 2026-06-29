@@ -2,4 +2,6 @@ bin/
 obj/
 node_modules/
 .discord-webhooks
+.nexus-api-key
+.env
 mods/*/changelog.txt
