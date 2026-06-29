@@ -80,20 +80,6 @@
       ]
     },
     {
-      "id": "core",
-      "title": "Core",
-      "entries": [
-        {
-          "signature": "Core.OnInitializeMelon()",
-          "description": "Runs after the Melon has registered. This callback waits until MelonLoader has fully initialized (MelonEvents.OnApplicationStart)."
-        },
-        {
-          "signature": "Core.OnUpdate()",
-          "description": "Runs once per frame."
-        }
-      ]
-    },
-    {
       "id": "crossmenu",
       "title": "CrossMenu",
       "intro": "CairnAPI cross-menu subsystem. Lets other mods add actions to Cairn's cross-menu, and adds new LT+chord \"extra menus\" of their own. Define menus by chord, then register actions into them. Static façade in the CairnAPI per-subsystem idiom: CrossMenu.Install does the one-time Il2Cpp/Harmony setup (called from Core.OnInitializeMelon); CrossMenu.Tick pumps the menu controller every frame (called from Core.OnUpdate).",
@@ -672,21 +658,6 @@
       "title": "RoutingHandler",
       "intro": "The single Il2Cpp-injected UI.CrossMenuActionHandler subclass. The game's CrossMenuUI stores one handler per CrossMenuActionType in its handlers dictionary and dispatches OnExecute/IsAvailable/ GetCount through the native vtable. We register ONE managed subclass and give each instance a synthetic type-int; the virtual overrides route to the managed CairnAPI.Registry by that int, so consumer mods never touch Il2Cpp. This is the load-bearing assumption of the whole library: that a native vtable call into the game's handler dict reaches these managed overrides. Proven shaped-correct live (base exposes an (IntPtr) injectable ctor and OnExecute is virtual); end-to-end dispatch is exercised by the in-game smoke test.",
       "entries": [
-        {
-          "signature": "RoutingHandler.#ctor(ptr)",
-          "description": "Required by Il2CppInterop for objects created from the native side.",
-          "params": [
-            {
-              "name": "ptr",
-              "type": "IntPtr",
-              "description": ""
-            }
-          ]
-        },
-        {
-          "signature": "RoutingHandler.#ctor()",
-          "description": "Managed construction of an INJECTED instance. Must NOT chain to a base game ctor — that would allocate a base-class native object whose vtable lacks our overrides (the dict would hold a plain CrossMenuActionHandler and OnExecute would be a no-op). DerivedConstructorPointer allocates the injected class; DerivedConstructorBody wires the managed↔native link so the injected vtable (with our overrides) is used."
-        },
         {
           "signature": "RoutingHandler.TypeValue",
           "description": "The synthetic CrossMenuActionType int this instance answers for. Set right after construction (managed-side field; not visible to Il2Cpp, which is fine — only our overrides read it)."

@@ -1,0 +1,512 @@
+{
+  "mod": "CairnModOptions",
+  "generator": "docfx",
+  "sections": [
+    {
+      "id": "modoption.kind",
+      "title": "ModOption.Kind",
+      "intro": "Which kind of row this option renders as.",
+      "entries": [
+        {
+          "signature": "ModOption.Kind.Toggle",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.Slider",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.TextField",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.ListArrows",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.Dropdown",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.ButtonDouble",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.Action",
+          "description": ""
+        },
+        {
+          "signature": "ModOption.Kind.Label",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "id": "modoption",
+      "title": "ModOption",
+      "intro": "Build each row with a ModOption factory. Every option takes a label and an optional tooltip. Stateful options (toggle, slider, text, list, dropdown) bind either to a MelonPreferences entry — persisted to disk automatically — or to your own get/set callbacks.",
+      "code": {
+        "lang": "csharp",
+        "src": "// backed by a MelonPreferences entry (persists to disk)\nModOption.Toggle(\"Enable\", enabledEntry);\n\n// or your own get/set\nModOption.Toggle(\"Enable\",\n    () => _enabled, v => _enabled = v);\n\n// numeric-only text field\nModOption.TextField(\"Max count\", maxEntry,\n    TMP_InputField.ContentType.IntegerNumber);\n\n// a non-persistent action button\nModOption.Action(\"Reload config\", ReloadConfig);"
+      },
+      "entries": [
+        {
+          "signature": "ModOption.Toggle(label, entry, tooltip?)",
+          "returns": "ModOption",
+          "description": "Bool on/off. Backed by a MelonPreferences_Entry<bool>, or a Func<bool> get / Action<bool> set pair.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "entry",
+              "type": "MelonPreferences_Entry<bool>",
+              "description": "Backing preference (or pass get/set callbacks)."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Toggle(label, get, set, tooltip?)",
+          "returns": "ModOption",
+          "description": "Bool on/off. Backed by a MelonPreferences_Entry<bool>, or a Func<bool> get / Action<bool> set pair.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "get",
+              "type": "Func<bool>",
+              "description": "Reads the current value."
+            },
+            {
+              "name": "set",
+              "type": "Action<bool>",
+              "description": "Writes the new value."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Slider(label, min, max, entry, tooltip?)",
+          "returns": "ModOption",
+          "description": "Float slider in [min, max].",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "min",
+              "type": "float",
+              "description": "Lower bound."
+            },
+            {
+              "name": "max",
+              "type": "float",
+              "description": "Upper bound."
+            },
+            {
+              "name": "entry",
+              "type": "MelonPreferences_Entry<float>",
+              "description": "Backing preference (or pass get/set)."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Slider(label, min, max, get, set, tooltip?)",
+          "returns": "ModOption",
+          "description": "Float slider in [min, max].",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "min",
+              "type": "float",
+              "description": "Lower bound."
+            },
+            {
+              "name": "max",
+              "type": "float",
+              "description": "Upper bound."
+            },
+            {
+              "name": "get",
+              "type": "Func<float>",
+              "description": "Reads the current value."
+            },
+            {
+              "name": "set",
+              "type": "Action<float>",
+              "description": "Writes the new value."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.TextField(label, entry, contentType?, tooltip?)",
+          "returns": "ModOption",
+          "description": "Editable string. contentType sets the keyboard/validation mode (e.g. IntegerNumber for numeric-only).",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "entry",
+              "type": "MelonPreferences_Entry<string>",
+              "description": "Backing preference (or pass get/set)."
+            },
+            {
+              "name": "contentType",
+              "type": "TMP_InputField.ContentType",
+              "description": "Input mode. Default Standard.",
+              "optional": true
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.TextField(label, get, set, contentType?, tooltip?)",
+          "returns": "ModOption",
+          "description": "Editable string. contentType sets the keyboard/validation mode (e.g. IntegerNumber for numeric-only).",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "get",
+              "type": "Func<string>",
+              "description": "Reads the current value."
+            },
+            {
+              "name": "set",
+              "type": "Action<string>",
+              "description": "Writes the new value."
+            },
+            {
+              "name": "contentType",
+              "type": "TMP_InputField.ContentType",
+              "description": "Input mode. Default Standard.",
+              "optional": true
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.ListArrows(label, choices, entry, tooltip?)",
+          "returns": "ModOption",
+          "description": "Pick from a string list with left/right arrows. Stores the selected index.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "choices",
+              "type": "string[]",
+              "description": "Options to cycle through."
+            },
+            {
+              "name": "entry",
+              "type": "MelonPreferences_Entry<int>",
+              "description": "Stores the selected index (or pass get/set)."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.ListArrows(label, choices, get, set, tooltip?)",
+          "returns": "ModOption",
+          "description": "Pick from a string list with left/right arrows. Stores the selected index.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "choices",
+              "type": "string[]",
+              "description": "Options to cycle through."
+            },
+            {
+              "name": "get",
+              "type": "Func<int>",
+              "description": "Reads the selected index."
+            },
+            {
+              "name": "set",
+              "type": "Action<int>",
+              "description": "Writes the selected index."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Dropdown(label, choices, entry, tooltip?)",
+          "returns": "ModOption",
+          "description": "Pick from a string list with a popup dropdown. Stores the selected index.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "choices",
+              "type": "string[]",
+              "description": "Options to pick from."
+            },
+            {
+              "name": "entry",
+              "type": "MelonPreferences_Entry<int>",
+              "description": "Stores the selected index (or pass get/set)."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Dropdown(label, choices, get, set, tooltip?)",
+          "returns": "ModOption",
+          "description": "Pick from a string list with a popup dropdown. Stores the selected index.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "choices",
+              "type": "string[]",
+              "description": "Options to pick from."
+            },
+            {
+              "name": "get",
+              "type": "Func<int>",
+              "description": "Reads the selected index."
+            },
+            {
+              "name": "set",
+              "type": "Action<int>",
+              "description": "Writes the selected index."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.ButtonDouble(label, leftLabel, invokeLeft, rightLabel, invokeRight, leftActive?, rightActive?, tooltip?)",
+          "returns": "ModOption",
+          "description": "A row with two action buttons side by side. No persistent state. leftActive/rightActive toggle interactivity.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Row label."
+            },
+            {
+              "name": "leftLabel",
+              "type": "string",
+              "description": "Left button text."
+            },
+            {
+              "name": "invokeLeft",
+              "type": "Action",
+              "description": "Left button callback."
+            },
+            {
+              "name": "rightLabel",
+              "type": "string",
+              "description": "Right button text."
+            },
+            {
+              "name": "invokeRight",
+              "type": "Action",
+              "description": "Right button callback."
+            },
+            {
+              "name": "leftActive",
+              "type": "bool",
+              "description": "Whether the left button is interactive. Default true.",
+              "optional": true
+            },
+            {
+              "name": "rightActive",
+              "type": "bool",
+              "description": "Whether the right button is interactive. Default true.",
+              "optional": true
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Action(label, invoke, tooltip?)",
+          "returns": "ModOption",
+          "description": "A single action button. No persistent state.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": "Button text."
+            },
+            {
+              "name": "invoke",
+              "type": "Action",
+              "description": "Pressed callback."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ModOption.Info(text, tooltip?)",
+          "returns": "ModOption",
+          "description": "Read-only display text. No interaction — use for section headers or status lines.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "description": "Display text."
+            },
+            {
+              "name": "tooltip",
+              "type": "string",
+              "description": "Optional hover help.",
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modoptions",
+      "title": "ModOptions",
+      "intro": "Register a list of options under your mod's name. They become one section of the Mods page, selectable from the dropdown. Re-registering replaces your previous list. Consumer mods never touch the UI — the page reads this registry.",
+      "code": {
+        "lang": "csharp",
+        "src": "ModOptions.Register(\"MyMod\", new[]\n{\n    ModOption.Toggle(\"God mode\", godModeEntry),\n    ModOption.Slider(\"Speed\", 0f, 10f, speedEntry),\n    ModOption.Dropdown(\"Difficulty\",\n        new[]{ \"Easy\", \"Normal\", \"Hard\" }, difficultyEntry),\n    ModOption.Action(\"Reset to defaults\", ResetAll),\n});"
+      },
+      "entries": [
+        {
+          "signature": "ModOptions.Sets",
+          "returns": "IReadOnlyList<ModOptionSet>",
+          "description": "Every registered mod's option block, in registration order."
+        },
+        {
+          "signature": "ModOptions.Register(modName, options)",
+          "description": "Register or replace your mod's option list. modName labels your entry in the dropdown.",
+          "params": [
+            {
+              "name": "modName",
+              "type": "string",
+              "description": "Display name shown in the mod selector."
+            },
+            {
+              "name": "options",
+              "type": "IEnumerable<ModOption>",
+              "description": "Rows to display, in declaration order."
+            }
+          ]
+        },
+        {
+          "signature": "ModOptions.Unregister(modName)",
+          "description": "Remove your mod's options from the page.",
+          "params": [
+            {
+              "name": "modName",
+              "type": "string",
+              "description": "The name you registered under."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modoptionset",
+      "title": "ModOptionSet",
+      "intro": "One mod's block of options.",
+      "entries": [
+        {
+          "signature": "ModOptionSet.ModName",
+          "description": "Display name the block was registered under."
+        },
+        {
+          "signature": "ModOptionSet.Options",
+          "description": "The mod's option rows, in declaration order."
+        }
+      ]
+    }
+  ]
+}

@@ -5,35 +5,36 @@ using MelonLoader;
 
 namespace CairnModOptions;
 
-// Registry for mod-authored settings that CairnModOptions surfaces as a "Mods" page inside
-// the game's native SettingsMenu. Each registered mod becomes one selectable section of the
-// page (picked via the mod-selector dropdown at the top).
-//
-// Usage:
-//   ModOptions.Register("MyMod", new[]
-//   {
-//       ModOption.Toggle      ("God Mode",         myBoolEntry),
-//       ModOption.Slider      ("Speed", 0f, 10f,   myFloatEntry),
-//       ModOption.TextField   ("Player Name",       myStringEntry),
-//       ModOption.ListArrows  ("Difficulty",        new[]{"Easy","Normal","Hard"}, myIntEntry),
-//       ModOption.Dropdown    ("Resolution",        new[]{"1080p","1440p","4K"},   myIntEntry),
-//       ModOption.ButtonDouble("Save / Load", "Save", OnSave, "Load", OnLoad),
-//       ModOption.Action      ("Reset to defaults", OnReset),
-//       ModOption.Info        ("Version: 1.0.0"),
-//   });
-//
-// Options are displayed in declaration order. Re-registering a mod replaces its option list.
-// The page renders this registry; consumer mods never touch the UI directly.
+/// <summary>
+/// Register a list of options under your mod's name. They become one section of the Mods page,
+/// selectable from the dropdown. Re-registering replaces your previous list. Consumer mods never
+/// touch the UI — the page reads this registry.
+/// <code class="lang-csharp">
+/// ModOptions.Register("MyMod", new[]
+/// {
+///     ModOption.Toggle("God mode", godModeEntry),
+///     ModOption.Slider("Speed", 0f, 10f, speedEntry),
+///     ModOption.Dropdown("Difficulty",
+///         new[]{ "Easy", "Normal", "Hard" }, difficultyEntry),
+///     ModOption.Action("Reset to defaults", ResetAll),
+/// });
+/// </code>
+/// </summary>
 public static class ModOptions
 {
     private static readonly List<ModOptionSet> _sets = new();
     private static readonly object _lock = new();
 
+    /// <summary>Every registered mod's option block, in registration order.</summary>
+    /// <returns>IReadOnlyList&lt;ModOptionSet&gt;</returns>
     public static IReadOnlyList<ModOptionSet> Sets
     {
         get { lock (_lock) return _sets.AsReadOnly(); }
     }
 
+    /// <summary>Register or replace your mod's option list. modName labels your entry in the dropdown.</summary>
+    /// <param name="modName">Display name shown in the mod selector.</param>
+    /// <param name="options">Rows to display, in declaration order.</param>
     public static void Register(string modName, IEnumerable<ModOption> options)
     {
         if (string.IsNullOrWhiteSpace(modName))
@@ -50,18 +51,26 @@ public static class ModOptions
         MelonLogger.Msg($"[ModOptions] Registered {modName}.");
     }
 
+    /// <summary>Remove your mod's options from the page.</summary>
+    /// <param name="modName">The name you registered under.</param>
     public static void Unregister(string modName)
     {
         lock (_lock) _sets.RemoveAll(s => s.ModName == modName);
     }
 }
 
-// One mod's block of options.
+/// <summary>One mod's block of options.</summary>
 public sealed class ModOptionSet
 {
+    /// <summary>Display name the block was registered under.</summary>
     public string ModName                  { get; }
+
+    /// <summary>The mod's option rows, in declaration order.</summary>
     public IReadOnlyList<ModOption> Options { get; }
 
+    /// <summary>Wrap a mod's name and its option rows into one block.</summary>
+    /// <param name="modName">Display name shown in the mod selector.</param>
+    /// <param name="options">Rows to display, in declaration order.</param>
     public ModOptionSet(string modName, List<ModOption> options)
     {
         ModName = modName;
@@ -69,9 +78,29 @@ public sealed class ModOptionSet
     }
 }
 
-// A single option entry. Construct via the static factory methods; do not subclass.
+/// <summary>
+/// Build each row with a ModOption factory. Every option takes a label and an optional tooltip.
+/// Stateful options (toggle, slider, text, list, dropdown) bind either to a MelonPreferences entry —
+/// persisted to disk automatically — or to your own get/set callbacks.
+/// <code class="lang-csharp">
+/// // backed by a MelonPreferences entry (persists to disk)
+/// ModOption.Toggle("Enable", enabledEntry);
+///
+/// // or your own get/set
+/// ModOption.Toggle("Enable",
+///     () =&gt; _enabled, v =&gt; _enabled = v);
+///
+/// // numeric-only text field
+/// ModOption.TextField("Max count", maxEntry,
+///     TMP_InputField.ContentType.IntegerNumber);
+///
+/// // a non-persistent action button
+/// ModOption.Action("Reload config", ReloadConfig);
+/// </code>
+/// </summary>
 public sealed class ModOption
 {
+    /// <summary>Which kind of row this option renders as.</summary>
     public enum Kind
     {
         Toggle,       // bool on/off
@@ -85,7 +114,9 @@ public sealed class ModOption
     }
 
     public Kind   Type    { get; }
+
     public string Label   { get; }
+
     public string Tooltip { get; }
 
     // Toggle
@@ -128,7 +159,11 @@ public sealed class ModOption
 
     // ── Toggle ────────────────────────────────────────────────────────────────
 
-    /// <summary>Bool on/off toggle backed by a MelonPreferences entry.</summary>
+    /// <summary>Bool on/off. Backed by a MelonPreferences_Entry&lt;bool&gt;, or a Func&lt;bool&gt; get / Action&lt;bool&gt; set pair.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="entry">Backing preference (or pass get/set callbacks).</param>
+    /// <param name="tooltip">Hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Toggle(string label, MelonPreferences_Entry<bool> entry,
         string tooltip = null)
     {
@@ -138,7 +173,12 @@ public sealed class ModOption
         return o;
     }
 
-    /// <summary>Bool on/off toggle backed by arbitrary get/set callbacks.</summary>
+    /// <summary>Bool on/off. Backed by a MelonPreferences_Entry&lt;bool&gt;, or a Func&lt;bool&gt; get / Action&lt;bool&gt; set pair.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="get">Reads the current value.</param>
+    /// <param name="set">Writes the new value.</param>
+    /// <param name="tooltip">Hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Toggle(string label, Func<bool> get, Action<bool> set,
         string tooltip = null)
     {
@@ -150,7 +190,13 @@ public sealed class ModOption
 
     // ── Slider ────────────────────────────────────────────────────────────────
 
-    /// <summary>Float slider in [<paramref name="min"/>, <paramref name="max"/>] backed by a MelonPreferences entry.</summary>
+    /// <summary>Float slider in [min, max].</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="min">Lower bound.</param>
+    /// <param name="max">Upper bound.</param>
+    /// <param name="entry">Backing preference (or pass get/set).</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Slider(string label, float min, float max,
         MelonPreferences_Entry<float> entry, string tooltip = null)
     {
@@ -162,7 +208,14 @@ public sealed class ModOption
         return o;
     }
 
-    /// <summary>Float slider in [<paramref name="min"/>, <paramref name="max"/>] backed by arbitrary callbacks.</summary>
+    /// <summary>Float slider in [min, max].</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="min">Lower bound.</param>
+    /// <param name="max">Upper bound.</param>
+    /// <param name="get">Reads the current value.</param>
+    /// <param name="set">Writes the new value.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Slider(string label, float min, float max,
         Func<float> get, Action<float> set, string tooltip = null)
     {
@@ -176,11 +229,12 @@ public sealed class ModOption
 
     // ── TextField ─────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Editable text field backed by a MelonPreferences entry.
-    /// <paramref name="contentType"/> controls the keyboard/validation mode
-    /// (e.g. <see cref="TMP_InputField.ContentType.IntegerNumber"/> for numeric-only input).
-    /// </summary>
+    /// <summary>Editable string. contentType sets the keyboard/validation mode (e.g. IntegerNumber for numeric-only).</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="entry">Backing preference (or pass get/set).</param>
+    /// <param name="contentType">Input mode. Default Standard.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption TextField(string label, MelonPreferences_Entry<string> entry,
         TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard,
         string tooltip = null)
@@ -192,10 +246,13 @@ public sealed class ModOption
         return o;
     }
 
-    /// <summary>
-    /// Editable text field backed by arbitrary get/set callbacks.
-    /// <paramref name="contentType"/> controls the keyboard/validation mode.
-    /// </summary>
+    /// <summary>Editable string. contentType sets the keyboard/validation mode (e.g. IntegerNumber for numeric-only).</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="get">Reads the current value.</param>
+    /// <param name="set">Writes the new value.</param>
+    /// <param name="contentType">Input mode. Default Standard.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption TextField(string label, Func<string> get, Action<string> set,
         TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard,
         string tooltip = null)
@@ -209,9 +266,12 @@ public sealed class ModOption
 
     // ── ListArrows ────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Left/right arrow list selector backed by a MelonPreferences entry (stores selected index).
-    /// </summary>
+    /// <summary>Pick from a string list with left/right arrows. Stores the selected index.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="choices">Options to cycle through.</param>
+    /// <param name="entry">Stores the selected index (or pass get/set).</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption ListArrows(string label, string[] choices,
         MelonPreferences_Entry<int> entry, string tooltip = null)
     {
@@ -222,7 +282,13 @@ public sealed class ModOption
         return o;
     }
 
-    /// <summary>Left/right arrow list selector backed by arbitrary get/set callbacks.</summary>
+    /// <summary>Pick from a string list with left/right arrows. Stores the selected index.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="choices">Options to cycle through.</param>
+    /// <param name="get">Reads the selected index.</param>
+    /// <param name="set">Writes the selected index.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption ListArrows(string label, string[] choices,
         Func<int> get, Action<int> set, string tooltip = null)
     {
@@ -235,9 +301,12 @@ public sealed class ModOption
 
     // ── Dropdown ──────────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Dropdown picker backed by a MelonPreferences entry (stores selected index).
-    /// </summary>
+    /// <summary>Pick from a string list with a popup dropdown. Stores the selected index.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="choices">Options to pick from.</param>
+    /// <param name="entry">Stores the selected index (or pass get/set).</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Dropdown(string label, string[] choices,
         MelonPreferences_Entry<int> entry, string tooltip = null)
     {
@@ -248,7 +317,13 @@ public sealed class ModOption
         return o;
     }
 
-    /// <summary>Dropdown picker backed by arbitrary get/set callbacks.</summary>
+    /// <summary>Pick from a string list with a popup dropdown. Stores the selected index.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="choices">Options to pick from.</param>
+    /// <param name="get">Reads the selected index.</param>
+    /// <param name="set">Writes the selected index.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Dropdown(string label, string[] choices,
         Func<int> get, Action<int> set, string tooltip = null)
     {
@@ -261,10 +336,16 @@ public sealed class ModOption
 
     // ── ButtonDouble ──────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// A row with two labelled action buttons side-by-side. Neither has persistent state.
-    /// <paramref name="leftActive"/> / <paramref name="rightActive"/> control interactivity.
-    /// </summary>
+    /// <summary>A row with two action buttons side by side. No persistent state. leftActive/rightActive toggle interactivity.</summary>
+    /// <param name="label">Row label.</param>
+    /// <param name="leftLabel">Left button text.</param>
+    /// <param name="invokeLeft">Left button callback.</param>
+    /// <param name="rightLabel">Right button text.</param>
+    /// <param name="invokeRight">Right button callback.</param>
+    /// <param name="leftActive">Whether the left button is interactive. Default true.</param>
+    /// <param name="rightActive">Whether the right button is interactive. Default true.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption ButtonDouble(
         string label,
         string leftLabel,  Action invokeLeft,
@@ -284,7 +365,11 @@ public sealed class ModOption
 
     // ── Action ────────────────────────────────────────────────────────────────
 
-    /// <summary>A single labelled button that fires a callback. No persistent state.</summary>
+    /// <summary>A single action button. No persistent state.</summary>
+    /// <param name="label">Button text.</param>
+    /// <param name="invoke">Pressed callback.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Action(string label, Action invoke, string tooltip = null)
     {
         var o = new ModOption(Kind.Action, label, tooltip);
@@ -294,7 +379,10 @@ public sealed class ModOption
 
     // ── Label ─────────────────────────────────────────────────────────────────
 
-    /// <summary>Read-only display text. No interaction. Use for section headers or status lines.</summary>
+    /// <summary>Read-only display text. No interaction — use for section headers or status lines.</summary>
+    /// <param name="text">Display text.</param>
+    /// <param name="tooltip">Optional hover help.</param>
+    /// <returns>ModOption</returns>
     public static ModOption Info(string text, string tooltip = null)
         => new ModOption(Kind.Label, text, tooltip);
 }

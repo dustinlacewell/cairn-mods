@@ -110,6 +110,22 @@ function loadItems(apiDir: string): DocfxItem[] {
 
 const TYPE_KINDS = new Set(["Class", "Struct", "Enum", "Interface"]);
 
+// MelonLoader lifecycle callbacks — framework plumbing a mod overrides, never API a
+// consumer calls. Excluded so a mod's `Core : MelonMod` doesn't pollute its reference.
+const MELON_LIFECYCLE = new Set([
+  "OnInitializeMelon", "OnDeinitializeMelon", "OnUpdate", "OnLateUpdate", "OnFixedUpdate",
+  "OnGUI", "OnApplicationQuit", "OnApplicationStart", "OnApplicationLateStart",
+  "OnSceneWasLoaded", "OnSceneWasInitialized", "OnSceneWasUnloaded",
+  "OnPreferencesLoaded", "OnPreferencesSaved",
+]);
+
+/** Members that are public for mechanism but are not consumer API: constructors
+ *  (construction is via factories / the system here) and MelonMod lifecycle overrides. */
+function isPlumbing(i: DocfxItem): boolean {
+  if (i.commentId.startsWith("M:") && i.id.startsWith("#ctor")) return true;
+  return MELON_LIFECYCLE.has(i.id.replace(/\(.*$/, ""));
+}
+
 function assembleSections(items: DocfxItem[]): ApiDocsResult {
   const byUid = new Map(items.map((i) => [i.uid, i]));
   const types = items.filter((i) => TYPE_KINDS.has(i.type));
@@ -127,6 +143,7 @@ function assembleSections(items: DocfxItem[]): ApiDocsResult {
         i.parent === t.uid &&
         !TYPE_KINDS.has(i.type) &&
         i.id !== "value__" &&
+        !isPlumbing(i) &&
         (i.summary || isEnum),
     );
     if (members.length === 0 && !t.summary) continue; // nothing documented here
