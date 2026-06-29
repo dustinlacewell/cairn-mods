@@ -65,6 +65,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      # Regenerate every migrated mod's API reference from its C# /// comments before the
+      # build, so the site never ships stale docs (DocFX builds against the committed
+      # game-refs via CI=true). Migrated mods are those with a site/src/data/api/<Mod>.json.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+      - name: Regenerate API reference
+        run: |
+          npm ci
+          dotnet tool install -g docfx
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          for f in site/src/data/api/*.json; do
+            mod=$(basename "$f" .json)
+            echo "::group::api-docs $mod"
+            npx --no-install wm api-docs "$mod" --quiet
+            echo "::endgroup::"
+          done
+
       - name: Install site deps
         run: npm ci
         working-directory: site

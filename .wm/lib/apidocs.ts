@@ -71,11 +71,15 @@ export function writeApiDocs(modName: string, result: ApiDocsResult): string {
 function runDocfxMetadata(modName: string, work: string): void {
   const docfx = resolveDocfx();
   const cfg = join(work, "docfx.json");
+  // In CI, pass CI=true through so Directory.Build.props resolves references to the
+  // committed game-refs/ rather than a local Steam install. Unset locally → local refs.
+  const properties = process.env["CI"] ? { CI: process.env["CI"]! } : undefined;
   writeFileSync(cfg, JSON.stringify({
     metadata: [{
       src: [{ files: [`${modName}.csproj`], src: join(ROOT, "mods", modName).replace(/\\/g, "/") }],
       dest: "api",
       outputFormat: "mref",
+      ...(properties ? { properties } : {}),
     }],
   }), "utf-8");
   execFileSync(docfx, ["metadata", cfg], { stdio: "pipe", cwd: work });
