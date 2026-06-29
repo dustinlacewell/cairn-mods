@@ -140,7 +140,7 @@ mirrors without re-announcing → no ping-pong.
 - **Live debugging**: CairnDevTools (`docs/cairn-devtools.md`) — the `belay` command dumps the full
   connection graph in one call; eval `CairnCoop.Core.Instance.Driver.…`. Default to it over log-reading.
 - Env hooks: `CAIRNCOOP_AUTOHOST=1` auto-hosts ~25 s after boot; `CAIRNCOOP_AUTOJOIN=local` auto-joins a
-  local host. `CROSSMENULIB_SELFTEST=1` re-enables CrossMenuLib's demo wheel (off by default).
+  local host.
 
 ## Gotchas (hard-won)
 
@@ -152,8 +152,8 @@ mirrors without re-announcing → no ping-pong.
   while the rope renders into the floor or the other side is broken.
 - The local-joiner's game talks **directly** to the relay (`127.0.0.2:14000`) — the mod cannot intercept
   its inbound game traffic. That's why mod-rope needs the `ModLoopback` for local testing.
-- `[MelonOptionalDependencies("CrossMenuLib")]` orders the load; the rope wedge registration is guarded
-  so a missing CrossMenuLib only logs, never throws.
+- `[MelonOptionalDependencies("CairnAPI")]` orders the load; the rope wedge registration is guarded
+  so a missing CairnAPI only logs, never throws.
 
 ## Documentation index
 
@@ -164,5 +164,5 @@ mirrors without re-announcing → no ping-pong.
 | `re/systems/climbot/rope-length.md` | The climbot's `idleRopeLength` is the real length authority (bypasses `SetLengthSafe`). |
 | `re/systems/climber/secured-falling.md` | The SecuredFalling recovery surface (auto-exit to hang-idle). |
 | `re/systems/netplay/wire-protocol.md`, `re/systems/netplay/netplay-internals.md` | The native netplay wire protocol the relay reimplements. |
-| `re/systems/ui/crossmenu/crossmenu-internals.md` | The CrossMenu the rope wedge plugs into (lib is `mods/CrossMenuLib/`). |
+| `re/systems/ui/crossmenu/crossmenu-internals.md` | The CrossMenu the rope wedge plugs into (subsystem in `mods/CairnAPI/`, façade `CairnAPI.CrossMenu`). |
 | `docs/cairn-devtools.md` | The live-interrogation console (the `belay` command, eval). |

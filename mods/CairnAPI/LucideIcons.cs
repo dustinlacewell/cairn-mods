@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEngine;
 using MelonLoader;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Built-in Lucide icon set (1964 icons), embedded as an indexed PNG blob and decoded to
@@ -17,7 +17,7 @@ namespace CrossMenuLib;
 /// </summary>
 public static class LucideIcons
 {
-    private const string ResourceName = "CrossMenuLib.Resources.lucide.pack";
+    private const string ResourceName = "CairnAPI.Resources.lucide.pack";
 
     private sealed class Slot { internal long Offset; internal int Length; }
 
@@ -50,7 +50,7 @@ public static class LucideIcons
         var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { name = "lucide_" + name };
         if (!ImageConversion.LoadImage(tex, png))
         {
-            MelonLogger.Warning($"[CrossMenuLib] failed to decode lucide '{name}'.");
+            MelonLogger.Warning($"[CairnAPI:CrossMenu] failed to decode lucide '{name}'.");
             return null;
         }
         tex.wrapMode = TextureWrapMode.Clamp;
@@ -67,14 +67,14 @@ public static class LucideIcons
         try
         {
             using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName);
-            if (s == null) { MelonLogger.Error($"[CrossMenuLib] embedded resource '{ResourceName}' missing."); return; }
+            if (s == null) { MelonLogger.Error($"[CairnAPI:CrossMenu] embedded resource '{ResourceName}' missing."); return; }
             using var ms = new MemoryStream();
             s.CopyTo(ms);
             _blob = ms.ToArray();
             ParseIndex();
-            MelonLogger.Msg($"[CrossMenuLib] Lucide loaded: {_index.Count} icons.");
+            MelonLogger.Msg($"[CairnAPI:CrossMenu] Lucide loaded: {_index.Count} icons.");
         }
-        catch (System.Exception ex) { MelonLogger.Error($"[CrossMenuLib] Lucide load failed: {ex}"); }
+        catch (System.Exception ex) { MelonLogger.Error($"[CairnAPI:CrossMenu] Lucide load failed: {ex}"); }
     }
 
     private static void ParseIndex()

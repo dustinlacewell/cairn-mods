@@ -4,7 +4,7 @@ using CrossMenuUI = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI;
 using CrossMenuActionHandler = Il2CppTheGameBakers.Cairn.UI.CrossMenuActionHandler;
 using Il2CppActionType = Il2CppTheGameBakers.Cairn.UI.CrossMenuActionType;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Inserts/replaces an entry in a CrossMenuUI's <c>handlers</c> dictionary
@@ -18,7 +18,7 @@ internal static class HandlerOps
         var dict = ui.handlers;
         if (dict == null)
         {
-            MelonLogger.Warning("[CrossMenuLib] target menu has no handlers dict; cannot add handler.");
+            MelonLogger.Warning("[CairnAPI:CrossMenu] target menu has no handlers dict; cannot add handler.");
             return;
         }
         var key = (Il2CppActionType)typeValue;

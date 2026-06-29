@@ -6,7 +6,7 @@ using Il2CppMenuLayer = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI.MenuLayer;
 using Il2CppMappedAction = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI.MenuLayer.MappedAction;
 using Il2CppDirection = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI.Direction;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>Top or bottom layer of the vanilla cross-menu (internal — the public API has no layer concept).</summary>
 internal enum MenuLayerId { Top = 0, Bottom = 1 }
@@ -24,7 +24,7 @@ internal static class LayerOps
         return ml.actions;
     }
 
-    internal static bool HasDirection(Il2CppReferenceArray<Il2CppMappedAction> arr, MenuDir dir)
+    internal static bool HasDirection(Il2CppReferenceArray<Il2CppMappedAction> arr, CrossMenuDir dir)
     {
         if (arr == null) return false;
         var d = (Il2CppDirection)(int)dir;
@@ -34,7 +34,7 @@ internal static class LayerOps
     }
 
     /// <summary>Set (replace or append) the action SO at (layer, dir).</summary>
-    internal static void SetSlot(CrossMenuUI ui, MenuLayerId layer, MenuDir dir, Il2CppGameAction so)
+    internal static void SetSlot(CrossMenuUI ui, MenuLayerId layer, CrossMenuDir dir, Il2CppGameAction so)
     {
         var ml = layer == MenuLayerId.Top ? ui.topLayer : ui.bottomLayer;
         var arr = ml.actions;

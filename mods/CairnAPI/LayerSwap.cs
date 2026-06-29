@@ -5,7 +5,7 @@ using Il2CppReferenceArrayMapped = Il2CppInterop.Runtime.InteropTypes.Arrays.Il2
 using Il2CppMappedAction = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI.MenuLayer.MappedAction;
 using Il2CppDirection = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI.Direction;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Drives a mod menu by <em>borrowing</em> the vanilla cross-menu's TOP layer, so the game's own

@@ -2,7 +2,7 @@ using HarmonyLib;
 using Il2Cpp;
 using Il2CppActionType = Il2CppTheGameBakers.Cairn.UI.CrossMenuActionType;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Zone whitelist. When a TenzingVolume restricts the cross-menu to certain actions,

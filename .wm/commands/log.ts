@@ -9,7 +9,7 @@ const MODS_DIR = resolve(import.meta.dirname, "../../mods");
 const KNOWN_MODS = [
   "CairnAPI", "CairnModOptions", "CairnDevTools", "CairnCoop", "CairnRoutes",
   "CairnFreeRoam", "CairnForage", "CairnCarryWeight", "CairnAccessories",
-  "CairnNoCutscenes", "CairnArchipelago", "CairnTools", "CrossMenuLib",
+  "CairnNoCutscenes", "CairnArchipelago", "CairnTools",
 ];
 
 /** Append a changelog entry for a mod. */

@@ -2,7 +2,7 @@ using UnityEngine;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppGameAction = Il2CppTheGameBakers.Cairn.UI.CrossMenuAction;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Builds the game-side <c>CrossMenuAction</c> ScriptableObject (the per-slot data
@@ -74,7 +74,7 @@ internal static class IconFactory
                 float edge = Mathf.Clamp01((r - d) / 3f);
                 c = baseColor;
                 c.a = edge;
-                if (Glyph.Covers(glyph, x, y, N)) c = dimmed ? new Color(0.85f, 0.85f, 0.85f, 1f) : Color.white;
+                if (LucideGlyph.Covers(glyph, x, y, N)) c = dimmed ? new Color(0.85f, 0.85f, 0.85f, 1f) : Color.white;
             }
             else c = new Color(0, 0, 0, 0);
             tex.SetPixel(x, y, c);

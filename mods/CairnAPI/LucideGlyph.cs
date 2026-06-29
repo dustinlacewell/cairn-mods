@@ -1,10 +1,13 @@
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Minimal 5×7 bitmap font, just enough to stamp a single uppercase letter (or '?'
 /// / digit) into a placeholder icon. Not a real font — covers A–Z, 0–9, '?'.
+///
+/// <para>Named <c>LucideGlyph</c> to avoid colliding with CairnAPI's public input-action
+/// <see cref="Glyph"/>; this one is the cross-menu placeholder-icon letter stamp.</para>
 /// </summary>
-internal static class Glyph
+internal static class LucideGlyph
 {
     // Each glyph: 7 rows of 5 bits, MSB = leftmost column.
     private static readonly System.Collections.Generic.Dictionary<char, byte[]> Font = Build();

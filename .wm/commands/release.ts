@@ -11,7 +11,7 @@ const RELEASE_NOTES_DIR = join(ROOT, "release-notes");
 const KNOWN_MODS = [
   "CairnAPI", "CairnModOptions", "CairnDevTools", "CairnCoop", "CairnRoutes",
   "CairnFreeRoam", "CairnForage", "CairnCarryWeight", "CairnAccessories",
-  "CairnNoCutscenes", "CairnArchipelago", "CairnTools", "CrossMenuLib",
+  "CairnNoCutscenes", "CairnArchipelago", "CairnTools",
 ];
 
 function bumpVersion(version: string, part: "patch" | "minor" | "major"): string {

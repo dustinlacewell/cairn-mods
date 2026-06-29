@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Reads the gamepad and resolves which menu the currently-held chord selects.
 ///
 /// <para>The left trigger is the base "open the wheel" input (vanilla owns that). A mod menu is
-/// selected by LT <em>plus</em> an additional chord of modifiers (see <see cref="Modifier"/>). LT
+/// selected by LT <em>plus</em> an additional chord of modifiers (see <see cref="CrossMenuModifier"/>). LT
 /// alone resolves to no mod menu — the vanilla wheel shows. When several defined chords are all
 /// satisfied, the most specific one (most modifier bits) wins.</para>
 /// </summary>
@@ -35,11 +35,11 @@ internal static class ChordInput
     /// <summary>Most-specific defined chord (beyond LT) whose modifiers are all held; else null.</summary>
     private static string ResolveMenu(Gamepad pad)
     {
-        Modifier have = Modifier.None;
-        if (pad.rightTrigger.isPressed) have |= Modifier.RightTrigger;
-        if (pad.leftShoulder.isPressed) have |= Modifier.LeftBumper;
-        if (pad.rightShoulder.isPressed) have |= Modifier.RightBumper;
-        if (have == Modifier.None) return null;        // LT alone → vanilla wheel, not ours
+        CrossMenuModifier have = CrossMenuModifier.None;
+        if (pad.rightTrigger.isPressed) have |= CrossMenuModifier.RightTrigger;
+        if (pad.leftShoulder.isPressed) have |= CrossMenuModifier.LeftBumper;
+        if (pad.rightShoulder.isPressed) have |= CrossMenuModifier.RightBumper;
+        if (have == CrossMenuModifier.None) return null;        // LT alone → vanilla wheel, not ours
 
         string best = null;
         int bestBits = 0;

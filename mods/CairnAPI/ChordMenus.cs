@@ -1,6 +1,6 @@
 using CrossMenuUI = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Per-frame state machine for chord-selected mod menus. Each frame it reads the pad

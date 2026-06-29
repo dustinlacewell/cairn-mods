@@ -3,7 +3,7 @@ using MelonLoader;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppGameAction = Il2CppTheGameBakers.Cairn.UI.CrossMenuAction;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// One place that touches the private serialized fields of the game's CrossMenuAction
@@ -38,7 +38,7 @@ internal static class So
                                  System.Reflection.BindingFlags.Public |
                                  System.Reflection.BindingFlags.NonPublic);
         if (f != null) { f.SetValue(target, value); return; }
-        MelonLogger.Warning($"[CrossMenuLib] CrossMenuAction has no settable '{name}' (sprite/flag may not show).");
+        MelonLogger.Warning($"[CairnAPI:CrossMenu] CrossMenuAction has no settable '{name}' (sprite/flag may not show).");
     }
 
     /// <summary>The 'action' field is the CrossMenuActionType enum; set it from the raw int.</summary>
@@ -63,6 +63,6 @@ internal static class So
             f.SetValue(target, enumVal);
             return;
         }
-        MelonLogger.Warning("[CrossMenuLib] CrossMenuAction has no settable 'action' (type) field.");
+        MelonLogger.Warning("[CairnAPI:CrossMenu] CrossMenuAction has no settable 'action' (type) field.");
     }
 }

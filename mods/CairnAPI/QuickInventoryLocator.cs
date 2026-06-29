@@ -2,7 +2,7 @@ using MelonLoader;
 using CrossMenuUI = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI;
 using QuickInventoryUI = Il2CppTheGameBakers.Cairn.UI.QuickInventoryUI;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Finds the <see cref="QuickInventoryUI"/> that owns a given cross-menu. The menu lives at
@@ -17,7 +17,7 @@ internal static class QuickInventoryLocator
         if (menu == null) return null;
         var qiu = menu.GetComponentInParent<QuickInventoryUI>(true);
         if (qiu == null)
-            MelonLogger.Warning("[CrossMenuLib] no QuickInventoryUI parent found; menu force-show unavailable.");
+            MelonLogger.Warning("[CairnAPI:CrossMenu] no QuickInventoryUI parent found; menu force-show unavailable.");
         return qiu;
     }
 }

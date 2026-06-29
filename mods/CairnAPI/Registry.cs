@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using MelonLoader;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Managed-side store of defined menus and registered actions, plus the action-id ↔ synthetic
@@ -19,8 +19,8 @@ internal static class Registry
         internal Il2CppTheGameBakers.Cairn.UI.CrossMenuAction So;   // cached game data asset
     }
 
-    // menuId -> chord (extra modifiers beyond LT). BaseMenu is implicit (Modifier.None).
-    private static readonly Dictionary<string, Modifier> _menus = new();
+    // menuId -> chord (extra modifiers beyond LT). BaseMenu is implicit (CrossMenuModifier.None).
+    private static readonly Dictionary<string, CrossMenuModifier> _menus = new();
     private static readonly Dictionary<string, Entry> _byId = new();
     private static readonly Dictionary<int, Entry> _byType = new();
     private static int _nextType = FirstCustomType;
@@ -29,27 +29,27 @@ internal static class Registry
 
     // --- menus ---
 
-    internal static void DefineMenu(string menuId, Modifier chord)
+    internal static void DefineMenu(string menuId, CrossMenuModifier chord)
     {
-        if (string.IsNullOrEmpty(menuId)) { MelonLogger.Warning("[CrossMenuLib] DefineMenu: empty id."); return; }
-        if (menuId == CrossMenu.BaseMenu) { MelonLogger.Warning("[CrossMenuLib] DefineMenu: 'vanilla' is reserved."); return; }
-        if (chord == Modifier.None) { MelonLogger.Warning($"[CrossMenuLib] DefineMenu '{menuId}': chord None collides with the base menu."); return; }
+        if (string.IsNullOrEmpty(menuId)) { MelonLogger.Warning("[CairnAPI:CrossMenu] DefineMenu: empty id."); return; }
+        if (menuId == CrossMenu.BaseMenu) { MelonLogger.Warning("[CairnAPI:CrossMenu] DefineMenu: 'vanilla' is reserved."); return; }
+        if (chord == CrossMenuModifier.None) { MelonLogger.Warning($"[CairnAPI:CrossMenu] DefineMenu '{menuId}': chord None collides with the base menu."); return; }
 
         foreach (var kv in _menus)
             if (kv.Value == chord && kv.Key != menuId)
             {
-                MelonLogger.Warning($"[CrossMenuLib] DefineMenu '{menuId}': chord {chord} already claimed by '{kv.Key}'; ignored.");
+                MelonLogger.Warning($"[CairnAPI:CrossMenu] DefineMenu '{menuId}': chord {chord} already claimed by '{kv.Key}'; ignored.");
                 return;
             }
 
         _menus[menuId] = chord;
         Revision++;
-        MelonLogger.Msg($"[CrossMenuLib] menu '{menuId}' = LT + {chord}.");
+        MelonLogger.Msg($"[CairnAPI:CrossMenu] menu '{menuId}' = LT + {chord}.");
     }
 
-    internal static IEnumerable<KeyValuePair<string, Modifier>> Menus => _menus;
+    internal static IEnumerable<KeyValuePair<string, CrossMenuModifier>> Menus => _menus;
 
-    internal static bool TryGetChord(string menuId, out Modifier chord) => _menus.TryGetValue(menuId, out chord);
+    internal static bool TryGetChord(string menuId, out CrossMenuModifier chord) => _menus.TryGetValue(menuId, out chord);
 
     // --- actions ---
 
@@ -57,13 +57,13 @@ internal static class Registry
     {
         if (action == null || string.IsNullOrEmpty(action.Id))
         {
-            MelonLogger.Warning("[CrossMenuLib] Register: null action or empty Id.");
+            MelonLogger.Warning("[CairnAPI:CrossMenu] Register: null action or empty Id.");
             return;
         }
         if (action.Menu != CrossMenu.BaseMenu && !_menus.ContainsKey(action.Menu))
-            MelonLogger.Warning($"[CrossMenuLib] action '{action.Id}' targets undefined menu '{action.Menu}' (define it first).");
+            MelonLogger.Warning($"[CairnAPI:CrossMenu] action '{action.Id}' targets undefined menu '{action.Menu}' (define it first).");
         if (action.OnExecute == null)
-            MelonLogger.Warning($"[CrossMenuLib] action '{action.Id}' has no OnExecute; no-op.");
+            MelonLogger.Warning($"[CairnAPI:CrossMenu] action '{action.Id}' has no OnExecute; no-op.");
 
         if (_byId.TryGetValue(action.Id, out var existing))
         {
@@ -77,7 +77,7 @@ internal static class Registry
             _byType[e.TypeValue] = e;
         }
         Revision++;
-        MelonLogger.Msg($"[CrossMenuLib] registered '{action.Id}' ({action.Menu}/{action.Direction}).");
+        MelonLogger.Msg($"[CairnAPI:CrossMenu] registered '{action.Id}' ({action.Menu}/{action.Direction}).");
     }
 
     internal static void Unregister(string id)
@@ -94,7 +94,7 @@ internal static class Registry
     internal static bool IsCustomType(int typeValue) => _byType.ContainsKey(typeValue);
 
     /// <summary>First action registered to a given menu + direction.</summary>
-    internal static bool Find(string menuId, MenuDir dir, out Entry entry)
+    internal static bool Find(string menuId, CrossMenuDir dir, out Entry entry)
     {
         foreach (var e in _byId.Values)
             if (e.Action.Menu == menuId && e.Action.Direction == dir) { entry = e; return true; }

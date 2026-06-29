@@ -2,7 +2,7 @@ using UnityEngine;
 using Il2CppInterop.Runtime;
 using CrossMenuUI = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Locates the live, in-use vanilla CrossMenuUI. The scene contains two instances

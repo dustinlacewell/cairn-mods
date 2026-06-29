@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using MelonLoader;
 using CrossMenuUI = Il2CppTheGameBakers.Cairn.UI.CrossMenuUI;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Owns the live menu integration. Finds the active vanilla <see cref="CrossMenuUI"/>, keeps
@@ -49,7 +49,7 @@ internal static class MenuController
         if (found == null) return false;
         _menu = found;
         _chords = new ChordMenus(_menu);
-        MelonLogger.Msg($"[CrossMenuLib] bound real CrossMenuUI '{_menu.name}'; chord menus active.");
+        MelonLogger.Msg($"[CairnAPI:CrossMenu] bound real CrossMenuUI '{_menu.name}'; chord menus active.");
         return true;
     }
 
@@ -74,15 +74,15 @@ internal static class MenuController
             // don't overwrite an occupied stock direction)
             if (LayerOps.HasDirection(LayerOps.GetActions(_menu, MenuLayerId.Top), MapDir(e.Action.Direction)))
             {
-                MelonLogger.Warning($"[CrossMenuLib] base-menu slot {e.Action.Direction} is taken by vanilla; '{e.Action.Id}' skipped. Use a chord menu instead.");
+                MelonLogger.Warning($"[CairnAPI:CrossMenu] base-menu slot {e.Action.Direction} is taken by vanilla; '{e.Action.Id}' skipped. Use a chord menu instead.");
                 continue;
             }
             LayerOps.SetSlot(_menu, MenuLayerId.Top, e.Action.Direction, e.So);
         }
-        MelonLogger.Msg($"[CrossMenuLib] applied base-menu registrations.");
+        MelonLogger.Msg($"[CairnAPI:CrossMenu] applied base-menu registrations.");
     }
 
-    private static MenuDir MapDir(MenuDir d) => d;   // identity; kept for clarity at call site
+    private static CrossMenuDir MapDir(CrossMenuDir d) => d;   // identity; kept for clarity at call site
 
     // --- handler dict upkeep ---
 

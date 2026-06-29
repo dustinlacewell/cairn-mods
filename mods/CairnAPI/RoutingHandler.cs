@@ -4,7 +4,7 @@ using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
 using CrossMenuActionHandler = Il2CppTheGameBakers.Cairn.UI.CrossMenuActionHandler;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// The single Il2Cpp-injected <see cref="CrossMenuActionHandler"/> subclass. The
@@ -81,19 +81,19 @@ public class RoutingHandler : CrossMenuActionHandler
     private static void Guard(string id, string what, System.Action body)
     {
         try { body(); }
-        catch (Exception ex) { MelonLogger.Error($"[CrossMenuLib] '{id}'.{what} threw: {ex}"); }
+        catch (Exception ex) { MelonLogger.Error($"[CairnAPI:CrossMenu] '{id}'.{what} threw: {ex}"); }
     }
 
     private static bool GuardBool(string id, string what, Func<bool> body)
     {
         try { return body(); }
-        catch (Exception ex) { MelonLogger.Error($"[CrossMenuLib] '{id}'.{what} threw: {ex}"); return false; }
+        catch (Exception ex) { MelonLogger.Error($"[CairnAPI:CrossMenu] '{id}'.{what} threw: {ex}"); return false; }
     }
 
     private static int GuardInt(string id, string what, Func<int> body)
     {
         try { return body(); }
-        catch (Exception ex) { MelonLogger.Error($"[CrossMenuLib] '{id}'.{what} threw: {ex}"); return 0; }
+        catch (Exception ex) { MelonLogger.Error($"[CairnAPI:CrossMenu] '{id}'.{what} threw: {ex}"); return 0; }
     }
 
     private static bool _registered;
@@ -104,6 +104,6 @@ public class RoutingHandler : CrossMenuActionHandler
         if (_registered) return;
         ClassInjector.RegisterTypeInIl2Cpp<RoutingHandler>();
         _registered = true;
-        MelonLogger.Msg("[CrossMenuLib] RoutingHandler registered in Il2Cpp.");
+        MelonLogger.Msg("[CairnAPI:CrossMenu] RoutingHandler registered in Il2Cpp.");
     }
 }

@@ -1,15 +1,16 @@
 using System;
+using MelonLoader;
 using UnityEngine;
 
-namespace CrossMenuLib;
+namespace CairnAPI;
 
 /// <summary>
 /// Extra gamepad modifiers — held <em>in addition to the left trigger</em> — that select a
 /// menu. LT alone is the base (vanilla) wheel; LT + a chord of these selects a mod menu.
-/// Combine with '|' (e.g. <c>Modifier.RightTrigger</c>, or RB|LB for a two-button chord).
+/// Combine with '|' (e.g. <c>CrossMenuModifier.RightTrigger</c>, or RB|LB for a two-button chord).
 /// </summary>
 [Flags]
-public enum Modifier
+public enum CrossMenuModifier
 {
     None = 0,
     RightTrigger = 1 << 0,
@@ -19,7 +20,7 @@ public enum Modifier
 }
 
 /// <summary>One of the four radial directions. Mirrors the game's CrossMenuUI.Direction.</summary>
-public enum MenuDir
+public enum CrossMenuDir
 {
     Up = 1,
     Right = 2,
@@ -47,7 +48,7 @@ public sealed class CrossMenuAction
     /// </summary>
     public string Menu = CrossMenu.BaseMenu;
 
-    public MenuDir Direction = MenuDir.Up;
+    public CrossMenuDir Direction = CrossMenuDir.Up;
 
     /// <summary>A built-in Lucide icon name (e.g. "anchor", "flame"). Used when <see cref="Icon"/> is null.</summary>
     public string IconName;
@@ -78,27 +79,59 @@ public sealed class CrossMenuAction
 }
 
 /// <summary>
-/// Public entry point. Define menus by chord, then register actions into them.
+/// CairnAPI cross-menu subsystem. Lets other mods add actions to Cairn's cross-menu, and adds
+/// new LT+chord "extra menus" of their own. Define menus by chord, then register actions into them.
 /// <code>
-/// CrossMenu.DefineMenu("mymod.combat", Modifier.RightTrigger);   // LT+RT
+/// CrossMenu.DefineMenu("mymod.combat", CrossMenuModifier.RightTrigger);   // LT+RT
 /// CrossMenu.Register(new CrossMenuAction {
 ///     Id = "mymod.grapple", Label = "Grapple", IconName = "anchor",
-///     Menu = "mymod.combat", Direction = MenuDir.Up,
+///     Menu = "mymod.combat", Direction = CrossMenuDir.Up,
 ///     OnExecute = () => DoGrapple(),
 /// });
 /// </code>
+///
+/// <para>Static façade in the CairnAPI per-subsystem idiom: <see cref="Install"/> does the one-time
+/// Il2Cpp/Harmony setup (called from <c>Core.OnInitializeMelon</c>); <see cref="Tick"/> pumps the
+/// menu controller every frame (called from <c>Core.OnUpdate</c>).</para>
 /// </summary>
 public static class CrossMenu
 {
     /// <summary>The vanilla LT wheel (level-0). Actions here use only its free slots.</summary>
     public const string BaseMenu = "vanilla";
 
+    private static bool _initDone;
+
+    /// <summary>
+    /// One-time setup: inject the routing handler type into Il2Cpp before any instances are made,
+    /// then apply this subsystem's Harmony patches. Mirrors the other CairnAPI subsystems' Install.
+    /// </summary>
+    internal static void Install(HarmonyLib.Harmony harmony)
+    {
+        RoutingHandler.EnsureRegistered();           // inject our handler type before any instances are made
+        harmony.PatchAll(typeof(CrossMenu).Assembly);
+        _initDone = true;
+        MelonLogger.Msg("[CairnAPI:CrossMenu] initialised.");
+    }
+
+    /// <summary>
+    /// Per-frame pump of the chord-menu state machine. Must run every frame or the menu won't function.
+    /// Called from <c>Core.OnUpdate</c>. The HUD is streamed across many sub-scenes; we do NOT
+    /// invalidate per scene (that would thrash the clone) — MenuController self-heals when its bound
+    /// menu is destroyed.
+    /// </summary>
+    internal static void Tick()
+    {
+        if (!_initDone) return;
+        try { MenuController.Tick(); }
+        catch (Exception ex) { MelonLogger.Error($"[CairnAPI:CrossMenu] Tick error: {ex}"); }
+    }
+
     /// <summary>
     /// Define (or update) a menu selected by holding LT + the given modifier chord. Two mods
     /// must not claim the same chord; the first wins and a warning is logged. The base menu
     /// (LT alone) is implicit and need not be defined.
     /// </summary>
-    public static void DefineMenu(string menuId, Modifier chord) => Registry.DefineMenu(menuId, chord);
+    public static void DefineMenu(string menuId, CrossMenuModifier chord) => Registry.DefineMenu(menuId, chord);
 
     /// <summary>Register (or replace, by Id) a custom action. Safe to call before the HUD exists.</summary>
     public static void Register(CrossMenuAction action) => Registry.Register(action);

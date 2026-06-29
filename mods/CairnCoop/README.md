@@ -12,10 +12,10 @@ transport (a reimplementation of the studio's relay) over Steam datagrams or loc
 ## Install
 
 1. Install [MelonLoader](https://melonloader.co/) for Cairn (net6).
-2. Install **[CrossMenuLib](../CrossMenuLib/)** — CairnCoop's rope toggle lives on its radial menu.
+2. Install **[CairnAPI](../CairnAPI/)** — CairnCoop's rope toggle lives on its CrossMenu radial menu.
 3. Drop `CairnCoop.dll` in `Cairn/Mods/`. (Building from source auto-installs it — see DEVELOPERS.md.)
 
-Load order is handled automatically (`[MelonOptionalDependencies("CrossMenuLib")]`).
+Load order is handled automatically (`[MelonOptionalDependencies("CairnAPI")]`).
 
 ## Use
 

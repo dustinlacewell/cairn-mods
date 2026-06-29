@@ -9,8 +9,8 @@ using UnityEngine.InputSystem;
 
 [assembly: MelonInfo(typeof(CairnCoop.Core), "CairnCoop", "0.2.0", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
-// Load CrossMenuLib first: the rope connect/disconnect action lives on its LT+RT wheel.
-[assembly: MelonOptionalDependencies("CrossMenuLib")]
+// Load CairnAPI first: the rope connect/disconnect action lives on its CrossMenu LT+RT wheel.
+[assembly: MelonOptionalDependencies("CairnAPI")]
 
 namespace CairnCoop;
 
