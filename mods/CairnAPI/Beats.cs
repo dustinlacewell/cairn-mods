@@ -6,20 +6,40 @@ using TGB = Il2CppTheGameBakers.Cairn;
 namespace CairnAPI;
 
 // One story-beat sensor: its authored label and world position (bounds center of trigger volume).
+/// <summary>A story-beat sensor location.</summary>
 public readonly struct Beat
 {
     public Beat(string label, Vector3 position) { Label = label; Position = position; }
+
+    /// <summary>Authored beat name.</summary>
     public string Label { get; }
+
+    /// <summary>World-space center of the sensor trigger.</summary>
     public Vector3 Position { get; }
 }
 
 // Read-only access to the live story-beat sensors from StoryEventManager.allSensors.
 // Pure snapshot — no caching, no UI. Beats are sorted by label on every call.
+/// <summary>
+/// Enumerate story-beat sensors in the current scene.
+/// <code class="lang-csharp">
+/// if (!Beats.Available) return;
+///
+/// var beats = Beats.Snapshot();
+/// foreach (var b in beats)
+///     Log($"{b.Label}  @{b.Position}");
+///
+/// Teleport.To(beats[0].Position, _ =&gt; { });
+/// </code>
+/// </summary>
 public static class Beats
 {
+    /// <summary>True when the story manager is live. Check before calling Snapshot.</summary>
+    /// <returns>bool</returns>
     public static bool Available => MoSingleton<TGB.StoryEventManager>.Instance != null;
 
-    /// <summary>Snapshot every live story-beat sensor, sorted by label. Empty when not in gameplay.</summary>
+    /// <summary>Every story-beat sensor in the current scene, sorted by label. Pure — no caching.</summary>
+    /// <returns>List&lt;Beat&gt;</returns>
     public static List<Beat> Snapshot()
     {
         var result = new List<Beat>();

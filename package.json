@@ -2,6 +2,7 @@
   "name": "cairn-mods",
   "private": true,
   "devDependencies": {
-    "@ldlework/workmark": "latest"
+    "@ldlework/workmark": "latest",
+    "yaml": "^2.9.0"
   }
 }

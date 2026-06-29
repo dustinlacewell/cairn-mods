@@ -1,0 +1,1251 @@
+{
+  "mod": "CairnAPI",
+  "generator": "docfx",
+  "sections": [
+    {
+      "id": "addresult",
+      "title": "AddResult",
+      "intro": "Return value from Inventory.Add.",
+      "entries": [
+        {
+          "signature": "AddResult.Ok",
+          "description": "True if all requested items were added."
+        },
+        {
+          "signature": "AddResult.Added",
+          "description": "How many were actually added."
+        },
+        {
+          "signature": "AddResult.Error",
+          "description": "Failure reason when Ok is false."
+        }
+      ]
+    },
+    {
+      "id": "beat",
+      "title": "Beat",
+      "intro": "A story-beat sensor location.",
+      "entries": [
+        {
+          "signature": "Beat.Label",
+          "description": "Authored beat name."
+        },
+        {
+          "signature": "Beat.Position",
+          "description": "World-space center of the sensor trigger."
+        }
+      ]
+    },
+    {
+      "id": "beats",
+      "title": "Beats",
+      "intro": "Enumerate story-beat sensors in the current scene.",
+      "code": {
+        "lang": "csharp",
+        "src": "if (!Beats.Available) return;\n\nvar beats = Beats.Snapshot();\nforeach (var b in beats)\n    Log($\"{b.Label}  @{b.Position}\");\n\nTeleport.To(beats[0].Position, _ => { });"
+      },
+      "entries": [
+        {
+          "signature": "Beats.Available",
+          "returns": "bool",
+          "description": "True when the story manager is live. Check before calling Snapshot."
+        },
+        {
+          "signature": "Beats.Snapshot()",
+          "returns": "List<Beat>",
+          "description": "Every story-beat sensor in the current scene, sorted by label. Pure — no caching."
+        }
+      ]
+    },
+    {
+      "id": "cairnmenu.settingsrail",
+      "title": "CairnMenu.SettingsRail",
+      "entries": [
+        {
+          "signature": "CairnMenu.SettingsRail.AddPage(label, buildFields)",
+          "description": "Add a rail entry that opens a managed CairnAPI.SettingsPage — a native fieldsUI-backed page populated from buildFields. The returned page can swap its content live via SettingsPage.Refresh / SettingsPage.SetFields.",
+          "params": [
+            {
+              "name": "label",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "buildFields",
+              "type": "Func<Field[]>",
+              "description": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "core",
+      "title": "Core",
+      "entries": [
+        {
+          "signature": "Core.OnInitializeMelon()",
+          "description": "Runs after the Melon has registered. This callback waits until MelonLoader has fully initialized (MelonEvents.OnApplicationStart)."
+        },
+        {
+          "signature": "Core.OnUpdate()",
+          "description": "Runs once per frame."
+        }
+      ]
+    },
+    {
+      "id": "crossmenu",
+      "title": "CrossMenu",
+      "intro": "CairnAPI cross-menu subsystem. Lets other mods add actions to Cairn's cross-menu, and adds new LT+chord \"extra menus\" of their own. Define menus by chord, then register actions into them. Static façade in the CairnAPI per-subsystem idiom: CrossMenu.Install does the one-time Il2Cpp/Harmony setup (called from Core.OnInitializeMelon); CrossMenu.Tick pumps the menu controller every frame (called from Core.OnUpdate).",
+      "code": {
+        "lang": "csharp",
+        "src": "CrossMenu.DefineMenu(\"mymod.combat\", CrossMenuModifier.RightTrigger);   // LT+RT\nCrossMenu.Register(new CrossMenuAction {\n    Id = \"mymod.grapple\", Label = \"Grapple\", IconName = \"anchor\",\n    Menu = \"mymod.combat\", Direction = CrossMenuDir.Up,\n    OnExecute = () => DoGrapple(),\n});"
+      },
+      "entries": [
+        {
+          "signature": "CrossMenu.BaseMenu",
+          "description": "The vanilla LT wheel (level-0). Actions here use only its free slots."
+        },
+        {
+          "signature": "CrossMenu.DefineMenu(menuId, chord)",
+          "description": "Define (or update) a menu selected by holding LT + the given modifier chord. Two mods must not claim the same chord; the first wins and a warning is logged. The base menu (LT alone) is implicit and need not be defined.",
+          "params": [
+            {
+              "name": "menuId",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "chord",
+              "type": "CrossMenuModifier",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "CrossMenu.Register(action)",
+          "description": "Register (or replace, by Id) a custom action. Safe to call before the HUD exists.",
+          "params": [
+            {
+              "name": "action",
+              "type": "CrossMenuAction",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "CrossMenu.Unregister(id)",
+          "description": "Remove a previously-registered action by Id. No-op if unknown.",
+          "params": [
+            {
+              "name": "id",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "CrossMenu.Ready",
+          "description": "True once the live menu is found and the library is driving it."
+        }
+      ]
+    },
+    {
+      "id": "crossmenuaction",
+      "title": "CrossMenuAction",
+      "intro": "A custom cross-menu action a mod registers. The library owns all Il2Cpp/render/dispatch plumbing; a mod supplies identity, which menu + direction it occupies, an icon, and the behaviour callbacks.",
+      "entries": [
+        {
+          "signature": "CrossMenuAction.Id",
+          "description": "Stable unique id, e.g. \"mymod.grapple\". Re-registering the same id replaces it."
+        },
+        {
+          "signature": "CrossMenuAction.Label",
+          "description": "Shown in logs and (future) tooltips."
+        },
+        {
+          "signature": "CrossMenuAction.Menu",
+          "description": "The menu this action lives in — a menu id previously passed to CrossMenu.DefineMenu. Defaults to CrossMenu.BaseMenu (the vanilla LT wheel — only its free slots may be used)."
+        },
+        {
+          "signature": "CrossMenuAction.IconName",
+          "description": "A built-in Lucide icon name (e.g. \"anchor\", \"flame\"). Used when CrossMenuAction.Icon is null."
+        },
+        {
+          "signature": "CrossMenuAction.Icon",
+          "description": "Explicit icon sprite; takes precedence over CrossMenuAction.IconName. Null → placeholder."
+        },
+        {
+          "signature": "CrossMenuAction.DisplayCount",
+          "description": "If true a numeric badge (from CrossMenuAction.GetCount) is drawn on the icon."
+        },
+        {
+          "signature": "CrossMenuAction.CountWarningMaxValue",
+          "description": "At or below this count the badge turns to the warning colour. Only when DisplayCount."
+        },
+        {
+          "signature": "CrossMenuAction.OnExecute",
+          "description": "Invoked when the action is executed (after the hold-to-confirm). Required."
+        },
+        {
+          "signature": "CrossMenuAction.IsAvailable",
+          "description": "Return false to grey-out / block. Optional — default always-available."
+        },
+        {
+          "signature": "CrossMenuAction.GetCount",
+          "description": "Numeric badge value when CrossMenuAction.DisplayCount is set. Optional — default 0."
+        },
+        {
+          "signature": "CrossMenuAction.OnFailedExecute",
+          "description": "Invoked when attempted-but-unavailable. Optional."
+        }
+      ]
+    },
+    {
+      "id": "crossmenudir",
+      "title": "CrossMenuDir",
+      "intro": "One of the four radial directions. Mirrors the game's CrossMenuUI.Direction.",
+      "entries": [
+        {
+          "signature": "CrossMenuDir.Up",
+          "description": ""
+        },
+        {
+          "signature": "CrossMenuDir.Right",
+          "description": ""
+        },
+        {
+          "signature": "CrossMenuDir.Down",
+          "description": ""
+        },
+        {
+          "signature": "CrossMenuDir.Left",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "id": "crossmenumodifier",
+      "title": "CrossMenuModifier",
+      "intro": "Extra gamepad modifiers — held in addition to the left trigger — that select a menu. LT alone is the base (vanilla) wheel; LT + a chord of these selects a mod menu. Combine with '|' (e.g. CrossMenuModifier.RightTrigger, or RB|LB for a two-button chord).",
+      "entries": [
+        {
+          "signature": "CrossMenuModifier.None",
+          "description": ""
+        },
+        {
+          "signature": "CrossMenuModifier.RightTrigger",
+          "description": ""
+        },
+        {
+          "signature": "CrossMenuModifier.LeftBumper",
+          "description": ""
+        },
+        {
+          "signature": "CrossMenuModifier.RightBumper",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "id": "gameaction",
+      "title": "GameAction",
+      "intro": "Friendly names for the game actions a custom prompt most commonly echoes. See Glyph.Action.",
+      "entries": [
+        {
+          "signature": "GameAction.Interact",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.SharePath",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Confirm",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Cancel",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Navigate",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Pause",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Rest",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Rappel",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.AscendRope",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.GrabRope",
+          "description": ""
+        },
+        {
+          "signature": "GameAction.Rewind",
+          "description": ""
+        }
+      ]
+    },
+    {
+      "id": "glyph",
+      "title": "Glyph",
+      "entries": [
+        {
+          "signature": "Glyph.Action(action)",
+          "description": "The player's live InputAction for a curated game action (reflects their current rebind), or null if the input system isn't ready yet. Hand the result to a Prompt as its glyph.",
+          "params": [
+            {
+              "name": "action",
+              "type": "GameAction",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Glyph.Named(mapSlashAction)",
+          "description": "Resolve any game action by its \"Map/Action\" (or bare \"Action\") name against the live input asset — the escape hatch for actions not in the CairnAPI.GameAction enum. Null if not found / not ready.",
+          "params": [
+            {
+              "name": "mapSlashAction",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Glyph.Key(key)",
+          "description": "A glyph for a raw keyboard key, e.g. Glyph.Key(\"g\"). Special keys (enter/space/esc/tab/arrows…) resolve to a stock sprite; plain letter/number keys have no sprite in the icon DB, so they render as the human-readable key text (\"G\") — exactly as the game does. See CairnAPI.Glyph.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Glyph.Path(controlPath)",
+          "description": "A glyph for an arbitrary control path, e.g. Glyph.Path(\"<Gamepad>/buttonSouth\"). Buttons + special keys resolve to a stock sprite; anything without a DB sprite renders as human-readable text.",
+          "params": [
+            {
+              "name": "controlPath",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Glyph.Custom(name, bindingPaths)",
+          "description": "A cross-device action with MULTIPLE bindings (e.g. a keyboard key AND a gamepad button), enabled so it fires on either device, and usable BOTH as a prompt glyph (the glyph + adaptiveBinding auto-picks the active device's binding, so the keycap swaps to the pad button on a controller) AND as live input (poll action.WasPerformedThisFrame()). This is the parity path: bind \"<Keyboard>/b\" + \"<Gamepad>/buttonWest\" and the same action drives the icon and the trigger on both devices. name must be unique per logical action (it keys the action in the shared map).",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "bindingPaths",
+              "type": "string[]",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Glyph.Asset",
+          "description": "The live InputActionAsset the game is driving (player's bindings live here), or null pre-game."
+        }
+      ]
+    },
+    {
+      "id": "inventory",
+      "title": "Inventory",
+      "intro": "Add items to and query the player's inventory.",
+      "code": {
+        "lang": "csharp",
+        "src": "var result = Inventory.Add(InventoryItemStringIdEnum.Food_Nuts, 3);\nif (!result.Ok) LogWarning(result.Error);\nelse Log($\"Added {result.Added}\");\n\nint nuts  = Inventory.Count(InventoryItemStringIdEnum.Food_Nuts);\nfloat bag = Inventory.StorageWeight(StorageType.Bag);"
+      },
+      "entries": [
+        {
+          "signature": "Inventory.Add(id, count?)",
+          "returns": "AddResult",
+          "description": "Add items to the appropriate storage slot. Stops cleanly at capacity.",
+          "params": [
+            {
+              "name": "id",
+              "type": "InventoryItemStringIdEnum",
+              "description": "Item to add."
+            },
+            {
+              "name": "count",
+              "type": "int",
+              "description": "How many to add.",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "Inventory.Count(id)",
+          "returns": "int",
+          "description": "How many of an item the player currently holds.",
+          "params": [
+            {
+              "name": "id",
+              "type": "InventoryItemStringIdEnum",
+              "description": "Item to count."
+            }
+          ]
+        },
+        {
+          "signature": "Inventory.StorageWeight(storage)",
+          "returns": "float",
+          "description": "Current total weight in a storage slot.",
+          "params": [
+            {
+              "name": "storage",
+              "type": "StorageType",
+              "description": "Which slot to query."
+            }
+          ]
+        },
+        {
+          "signature": "Inventory.MaxBagWeight()",
+          "returns": "float",
+          "description": "The bag's weight capacity."
+        }
+      ]
+    },
+    {
+      "id": "iteminfo",
+      "title": "ItemInfo",
+      "intro": "Per-item metadata.",
+      "entries": [
+        {
+          "signature": "ItemInfo.Id",
+          "description": "Enum identifier."
+        },
+        {
+          "signature": "ItemInfo.Name",
+          "description": "Display name."
+        },
+        {
+          "signature": "ItemInfo.StoredIn",
+          "description": "Which storage slot holds this item."
+        },
+        {
+          "signature": "ItemInfo.MaxCount",
+          "description": "Maximum stack count."
+        },
+        {
+          "signature": "ItemInfo.UnitWeight",
+          "description": "Weight per unit. NaN for non-physical items."
+        }
+      ]
+    },
+    {
+      "id": "items",
+      "title": "Items",
+      "intro": "Read-only catalog of every item in the game.",
+      "code": {
+        "lang": "csharp",
+        "src": "foreach (var info in Items.All)\n    Log($\"{info.Name}  {info.StoredIn}  {info.UnitWeight:F2}kg\");\n\nvar rope = Items.Get(InventoryItemStringIdEnum.Rope_Standard);"
+      },
+      "entries": [
+        {
+          "signature": "Items.All",
+          "returns": "IReadOnlyList<ItemInfo>",
+          "description": "Every item in the game (315 entries). Cached after first access."
+        },
+        {
+          "signature": "Items.Get(id)",
+          "returns": "InventoryItem",
+          "description": "Resolve a single item config by enum id.",
+          "params": [
+            {
+              "name": "id",
+              "type": "InventoryItemStringIdEnum",
+              "description": "The item's enum identifier."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lucideicons",
+      "title": "LucideIcons",
+      "intro": "Built-in Lucide icon set (1964 icons), embedded as an indexed PNG blob and decoded to sprites on demand. Mods reference an icon by its Lucide name (e.g. \"anchor\", \"flame\", \"mountain-snow\"). Icons are white line-art on transparent — they tint cleanly over the menu's coloured wedge backgrounds. Pack format (little-endian): u32 count, then count × (u16 nameLen, name UTF-8, u32 dataLen) index, then the concatenated PNG bytes in index order.",
+      "entries": [
+        {
+          "signature": "LucideIcons.Names",
+          "description": "All available Lucide icon names (loads the index on first call)."
+        },
+        {
+          "signature": "LucideIcons.Has(name)",
+          "description": "True if the named icon exists in the bundle.",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "LucideIcons.Get(name)",
+          "description": "Get the sprite for a Lucide icon name, decoding + caching on first use. Returns null if the name is unknown (caller falls back to a placeholder).",
+          "params": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "proximityinteractable",
+      "title": "ProximityInteractable",
+      "intro": "The MonoBehaviour behind ProximityPrompt.Show. Polls Aava's distance to the anchor each frame: in range → shows a CairnAPI.WorldPrompt; out of range → hides it; pressing the glyph button while in range fires the callback.",
+      "entries": [
+        {
+          "signature": "ProximityInteractable.Destroy()",
+          "description": "Remove this prompt and its GameObject."
+        }
+      ]
+    },
+    {
+      "id": "proximityprompt",
+      "title": "ProximityPrompt",
+      "entries": [
+        {
+          "signature": "ProximityPrompt.Show(anchor, distance, text, glyph?, onInteract?)",
+          "description": "Show a CairnAPI.WorldPrompt over anchor while Aava is within distance of it. onInteract fires on the glyph's button while in range. Returns the component; call ProximityInteractable.Destroy to remove it.",
+          "params": [
+            {
+              "name": "anchor",
+              "type": "Transform",
+              "description": ""
+            },
+            {
+              "name": "distance",
+              "type": "float",
+              "description": ""
+            },
+            {
+              "name": "text",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "glyph",
+              "type": "InputAction",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "onInteract",
+              "type": "Action",
+              "description": "",
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reachinteractable",
+      "title": "ReachInteractable",
+      "intro": "The MonoBehaviour behind ReachPrompt.Show / ReachPrompt.Create. Trigger-driven: a limb sensor reaching into our collider shows a CairnAPI.WorldPrompt; leaving hides it; pressing the glyph button while reaching fires the callback.",
+      "entries": [
+        {
+          "signature": "ReachInteractable.Destroy()",
+          "description": "Remove this prompt and its GameObject."
+        }
+      ]
+    },
+    {
+      "id": "reachprompt",
+      "title": "ReachPrompt",
+      "entries": [
+        {
+          "signature": "ReachPrompt.Show(anchor, text, glyph?, onInteract?, radius?, localOffset?, hands?)",
+          "description": "Attach a reach prompt to a MOVING anchor (e.g. the climbot, an NPC, a carried prop). Parented to the anchor, so it tracks it automatically — pass the transform of the thing the player reaches toward. Shows a CairnAPI.WorldPrompt with text + glyph while a limb is REACHING into radius; onInteract fires on the glyph's button while reaching. localOffset shifts the trigger from the anchor's pivot to the actual grab point. hands true = only hands trigger it; false = any limb.",
+          "params": [
+            {
+              "name": "anchor",
+              "type": "Transform",
+              "description": ""
+            },
+            {
+              "name": "text",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "glyph",
+              "type": "InputAction",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "onInteract",
+              "type": "Action",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "radius",
+              "type": "float",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "localOffset",
+              "type": "Vector3",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "hands",
+              "type": "bool",
+              "description": "",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ReachPrompt.Create(position, text, glyph?, onInteract?, radius?, hands?)",
+          "description": "Spawn a reach prompt at a FIXED world position (a lever, a wall panel — something that doesn't move). For anything that moves, use ReachPrompt.Show instead.",
+          "params": [
+            {
+              "name": "position",
+              "type": "Vector3",
+              "description": ""
+            },
+            {
+              "name": "text",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "glyph",
+              "type": "InputAction",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "onInteract",
+              "type": "Action",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "radius",
+              "type": "float",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "hands",
+              "type": "bool",
+              "description": "",
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "routinghandler",
+      "title": "RoutingHandler",
+      "intro": "The single Il2Cpp-injected UI.CrossMenuActionHandler subclass. The game's CrossMenuUI stores one handler per CrossMenuActionType in its handlers dictionary and dispatches OnExecute/IsAvailable/ GetCount through the native vtable. We register ONE managed subclass and give each instance a synthetic type-int; the virtual overrides route to the managed CairnAPI.Registry by that int, so consumer mods never touch Il2Cpp. This is the load-bearing assumption of the whole library: that a native vtable call into the game's handler dict reaches these managed overrides. Proven shaped-correct live (base exposes an (IntPtr) injectable ctor and OnExecute is virtual); end-to-end dispatch is exercised by the in-game smoke test.",
+      "entries": [
+        {
+          "signature": "RoutingHandler.#ctor(ptr)",
+          "description": "Required by Il2CppInterop for objects created from the native side.",
+          "params": [
+            {
+              "name": "ptr",
+              "type": "IntPtr",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "RoutingHandler.#ctor()",
+          "description": "Managed construction of an INJECTED instance. Must NOT chain to a base game ctor — that would allocate a base-class native object whose vtable lacks our overrides (the dict would hold a plain CrossMenuActionHandler and OnExecute would be a no-op). DerivedConstructorPointer allocates the injected class; DerivedConstructorBody wires the managed↔native link so the injected vtable (with our overrides) is used."
+        },
+        {
+          "signature": "RoutingHandler.TypeValue",
+          "description": "The synthetic CrossMenuActionType int this instance answers for. Set right after construction (managed-side field; not visible to Il2Cpp, which is fine — only our overrides read it)."
+        }
+      ]
+    },
+    {
+      "id": "screen",
+      "title": "Screen",
+      "entries": [
+        {
+          "signature": "Screen.GameState",
+          "description": "GlobalGameManager.GameState enum value at the top of the state stack."
+        },
+        {
+          "signature": "Screen.IsMenu",
+          "description": "The main menu system is active (GameState stack contains Menu)."
+        },
+        {
+          "signature": "Screen.IsInGame",
+          "description": "Gameplay is active (GameState stack contains InGame). This is true even when the pause menu or bivouac is on top."
+        },
+        {
+          "signature": "Screen.IsCutscene",
+          "description": "A cutscene is playing (GameState stack contains Cutscene)."
+        },
+        {
+          "signature": "Screen.IsGameOver",
+          "description": "The game-over screen is up (GameState stack contains GameOver)."
+        },
+        {
+          "signature": "Screen.IsBivouac",
+          "description": "The bivouac rest menu is active (GameState == Bivouac)."
+        },
+        {
+          "signature": "Screen.PawnSpawned",
+          "description": "The pawn (Aava) is spawned in the world — the real \"we are in live gameplay\" test. Unlike LoadingState.GameStarted this is not sticky across menu returns."
+        },
+        {
+          "signature": "Screen.LoadingState",
+          "description": "The game's detailed load pipeline stage. ⚠ Sticky: retains its last value (e.g. GameStarted=8) after returning to the menu. The authoritative \"fully in gameplay\" signal is PawnSpawned, not GameStarted."
+        },
+        {
+          "signature": "Screen.IsTransitioning",
+          "description": "A cross-world / cross-zone / menu scene transition is in flight."
+        },
+        {
+          "signature": "Screen.IsLoadingMenu",
+          "description": "Specifically a game→menu transition is in flight (subset of IsTransitioning)."
+        },
+        {
+          "signature": "Screen.CurrentMenu",
+          "description": "The foremost open Menu canvas, or null. Changes only at UIManager.OnMenuClosed / OnMenuStacked — observe via OnMenuChanged if you need a callback."
+        },
+        {
+          "signature": "Screen.MainMenuStep",
+          "description": "The current MainMenu.Step, or null when the MainMenu scene is not loaded (i.e. during gameplay). Cast result to MainMenu.Step."
+        },
+        {
+          "signature": "Screen.OnGameStateChanged",
+          "description": "Fires whenever GlobalGameManager.GameState changes. Arguments: (from, to). Sourced from GameEventManager.ChangeGameState — fires for every push/pop and direct set."
+        },
+        {
+          "signature": "Screen.OnMenuChanged",
+          "description": "Fires when UIManager.CurrentMenu changes (a menu opens or the foreground menu closes). Argument is the NEW current menu (null when the stack empties)."
+        },
+        {
+          "signature": "Screen.OnCanvasOpened",
+          "description": "Fires when any BasicCanvasHandlerBehaviour finishes opening (OnOpened). Fires for menus AND HUDs. Cast the argument to check the concrete type."
+        },
+        {
+          "signature": "Screen.OnCanvasClosed",
+          "description": "Fires when any BasicCanvasHandlerBehaviour finishes closing (OnClosed). Fires for menus AND HUDs. Cast the argument to check the concrete type."
+        },
+        {
+          "signature": "Screen.OnTransitionStarted",
+          "description": "Fires when a game→menu or menu→game scene transition starts. Sourced from CairnSceneManager.OnGameUnloadingAboutToStart."
+        },
+        {
+          "signature": "Screen.OnTransitionCompleted",
+          "description": "Fires when a scene transition completes and all new scenes are ready. Sourced from CairnSceneManager.OnGameScenesReady."
+        },
+        {
+          "signature": "Screen.OnEnteringMenu",
+          "description": "Fires specifically when entering the main menu scene (game→menu path only), just before the menu scene itself loads. CairnSceneManager.OnPreparingToLoadMenu."
+        }
+      ]
+    },
+    {
+      "id": "screenprompt",
+      "title": "ScreenPrompt",
+      "entries": [
+        {
+          "signature": "ScreenPrompt.Show(text, glyph?, parent?)",
+          "description": "Show a screen-space prompt. text is shown as-is, glyph is the button icon (see CairnAPI.Glyph, null = none). If parent is null the row goes under a mod-owned overlay Canvas — place it with ScreenPrompt.Move; if given, the row is parented there (self-sizes for a HorizontalLayoutGroup). Returns a handle, or ScreenPromptHandle.Invalid if a required game asset isn't loaded yet.",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "glyph",
+              "type": "InputAction",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "parent",
+              "type": "Transform",
+              "description": "",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "ScreenPrompt.Move(handle, anchoredPos)",
+          "description": "Place an own-Canvas prompt anywhere on screen (its RectTransform's anchoredPosition). No-op for a prompt parented into your own layout (let the layout group place it).",
+          "params": [
+            {
+              "name": "handle",
+              "type": "ScreenPromptHandle",
+              "description": ""
+            },
+            {
+              "name": "anchoredPos",
+              "type": "Vector2",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "ScreenPrompt.SetText(handle, text)",
+          "description": "Change a live prompt's text in place (set once; persists with no pump).",
+          "params": [
+            {
+              "name": "handle",
+              "type": "ScreenPromptHandle",
+              "description": ""
+            },
+            {
+              "name": "text",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "ScreenPrompt.SetActive(handle, active)",
+          "description": "Show / hide the prompt (a layout group re-flows around a hidden one). Cheap — no re-register.",
+          "params": [
+            {
+              "name": "handle",
+              "type": "ScreenPromptHandle",
+              "description": ""
+            },
+            {
+              "name": "active",
+              "type": "bool",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "ScreenPrompt.Hide(handle)",
+          "description": "Destroy the prompt. Safe on an invalid handle.",
+          "params": [
+            {
+              "name": "handle",
+              "type": "ScreenPromptHandle",
+              "description": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "screenprompthandle",
+      "title": "ScreenPromptHandle",
+      "intro": "Opaque handle to a shown CairnAPI.ScreenPrompt. Pass it back to ScreenPrompt.Hide.",
+      "entries": [
+        {
+          "signature": "ScreenPromptHandle.Invalid",
+          "description": "A no-op handle returned when a required asset / the HUD wasn't available."
+        },
+        {
+          "signature": "ScreenPromptHandle.SetActive(active)",
+          "description": "Show / hide the prompt (the layout group re-flows around a hidden one).",
+          "params": [
+            {
+              "name": "active",
+              "type": "bool",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "ScreenPromptHandle.Destroy()",
+          "description": "Destroy the prompt GameObject. Idempotent."
+        }
+      ]
+    },
+    {
+      "id": "settingspage",
+      "title": "SettingsPage",
+      "entries": [
+        {
+          "signature": "SettingsPage.Refresh()",
+          "description": "Re-run the page builder and show the result without leaving the page."
+        },
+        {
+          "signature": "SettingsPage.SetFields(fields)",
+          "description": "Replace the page's visible rows with fields without leaving the page. Safe to call from inside a field callback — the swap is deferred to the next frame so the row that raised the event is not torn down mid-dispatch.",
+          "params": [
+            {
+              "name": "fields",
+              "type": "Field[]",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "SettingsPage.Dispose()",
+          "description": "Remove the rail entry. Pages normally live for the mod's lifetime."
+        }
+      ]
+    },
+    {
+      "id": "stamina",
+      "title": "Stamina",
+      "entries": [
+        {
+          "signature": "Stamina.AddEffortScale(key, scale)",
+          "description": "Register (or replace) a global effort cost multiplier. Applied uniformly to all limbs via CurrentEffortCostMultiplier. 1.0 = no effect.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "scale",
+              "type": "float",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.RemoveEffortScale(key)",
+          "description": "Remove a registered global effort scale.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.AddEffortScaleProvider(key, provider)",
+          "description": "Register (or replace) a per-limb effort scale provider. Callback receives the limb and returns a multiplier for that limb's CurrentEffortCostMultiplier. 1.0 = no effect.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "provider",
+              "type": "Func<ClimbingV2PawnLimb, float>",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.RemoveEffortScaleProvider(key)",
+          "description": "Remove a registered per-limb effort scale provider.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.AddDrainScale(key, scale)",
+          "description": "Register (or replace) a global drain speed multiplier. Applied to every limb's _CurrentStaminaConsumptionSpeed after UpdateStaminaState computes it. Only scales positive (draining) values; gaining limbs are not affected. 1.0 = no effect.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "scale",
+              "type": "float",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.RemoveDrainScale(key)",
+          "description": "Remove a registered global drain scale.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.AddDrainScaleProvider(key, provider)",
+          "description": "Register (or replace) a per-limb drain speed scale provider. Callback receives the limb and returns a multiplier for that limb's drain rate. Only applied when the limb is draining (consumptionSpeed > 0). 1.0 = no effect.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "provider",
+              "type": "Func<ClimbingV2PawnLimb, float>",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.RemoveDrainScaleProvider(key)",
+          "description": "Remove a registered per-limb drain scale provider.",
+          "params": [
+            {
+              "name": "key",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Stamina.Package",
+          "description": "The live ClimbingTweakablesPackage.Stamina for the local pawn. Fields: baseStamina, staminaGainSpeed, staminaLossSpeed, staminaLossCurve, criticalStaminaStateDuration, punishedCriticalStaminaStateDuration, effortExhaustionThreshold, handRestThreshold, footRestThreshold, handFreeEffortThreshold, footFreeEffortThreshold. Null if not in a session or the package isn't loaded."
+        }
+      ]
+    },
+    {
+      "id": "teleport",
+      "title": "Teleport",
+      "entries": [
+        {
+          "signature": "Teleport.Busy",
+          "description": "A warp is in flight; callers should gate repeat requests on this."
+        },
+        {
+          "signature": "Teleport.To(position, done)",
+          "description": "Warp the local climber to a world position. done fires with the warp's success flag (false immediately if there is no FreeRoamManager yet or a warp is in flight).",
+          "params": [
+            {
+              "name": "position",
+              "type": "Vector3",
+              "description": ""
+            },
+            {
+              "name": "done",
+              "type": "Action<bool>",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "Teleport.ToZone(zone, position, done)",
+          "description": "Teleport to a position in a (possibly UNLOADED, possibly cross-world) zone. The game's warp does NOT stream a far sector (the position-driven streamer only resolves to already-loaded zones — see re/systems/world-streaming/freeroam-warp.md), so we drive the engine's own teleport recipe: switch world if needed → force-load the owning zone (GateTriggered) → wait for the scene manager to settle → THEN warp the pawn onto the now-loaded ground. done fires with success.",
+          "params": [
+            {
+              "name": "zone",
+              "type": "ZoneSceneData",
+              "description": ""
+            },
+            {
+              "name": "position",
+              "type": "Vector3",
+              "description": ""
+            },
+            {
+              "name": "done",
+              "type": "Action<bool>",
+              "description": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "world",
+      "title": "World",
+      "entries": [
+        {
+          "signature": "World.Current",
+          "description": "The active world the StreamingManager is currently streaming, or null pre-gameplay."
+        },
+        {
+          "signature": "World.Worlds()",
+          "description": "Every authored world, resident even when only one is streamed (from StreamingTweakables)."
+        },
+        {
+          "signature": "World.Zones(world)",
+          "description": "Every zone of a world (its authored ZoneSceneData list).",
+          "params": [
+            {
+              "name": "world",
+              "type": "WorldZoneData",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "World.ResolveZone(world, zoneName)",
+          "description": "Find a zone by its asset name (e.g. \"01_FirstRidge\") within a world.",
+          "params": [
+            {
+              "name": "world",
+              "type": "WorldZoneData",
+              "description": ""
+            },
+            {
+              "name": "zoneName",
+              "type": "string",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "World.WorldOf(zone)",
+          "description": "The world that owns a zone (by identity scan over the catalog), or null.",
+          "params": [
+            {
+              "name": "zone",
+              "type": "ZoneSceneData",
+              "description": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worldprompt",
+      "title": "WorldPrompt",
+      "entries": [
+        {
+          "signature": "WorldPrompt.Show(anchor, text, glyph?, canInteract?, style?)",
+          "description": "Float a prompt over anchor. text is shown as-is, glyph is the button icon (see CairnAPI.Glyph, null = none). style tunes the float distance / wall-stick and whether it follows a moving anchor (null = the close default, ~1/3 of the game's wall-mount distance — live-tuned). Returns a handle for WorldPrompt.Hide. This drives our OWN widget, so a new Show replaces the previous mod prompt on it (one mod world prompt at a time); the game's own world prompts are untouched.",
+          "params": [
+            {
+              "name": "anchor",
+              "type": "Transform",
+              "description": ""
+            },
+            {
+              "name": "text",
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "glyph",
+              "type": "InputAction",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "canInteract",
+              "type": "bool",
+              "description": "",
+              "optional": true
+            },
+            {
+              "name": "style",
+              "type": "WorldPromptStyle",
+              "description": "",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "signature": "WorldPrompt.Hide(handle)",
+          "description": "Remove a world prompt. Safe on an invalid / already-hidden handle.",
+          "params": [
+            {
+              "name": "handle",
+              "type": "WorldPromptHandle",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "WorldPrompt.Ui",
+          "description": "OUR OWN world-prompt widget — a lazily-BUILT WorldGameplayPromptUI (from scratch, no clone), so a mod prompt coexists with the game's own in-world prompts instead of clobbering the single shared widget. Null before in-game UI init (the build needs the game's fonts/materials/sprites loaded)."
+        }
+      ]
+    },
+    {
+      "id": "worldpromptbuilder",
+      "title": "WorldPromptBuilder",
+      "entries": [
+        {
+          "signature": "WorldPromptBuilder.WorldTextStyle(tmp)",
+          "description": "Configure a world-prompt TMP so PLAIN text (written by us or the glyph component) routes to a TMP_SubMeshUI and renders through the after-image pass: fontStyle=Bold → Boxed-DemiBold SDF (index ≥1). A component-level property, so it survives the glyph's per-frame raw text writes — no tag-wrapping.",
+          "params": [
+            {
+              "name": "tmp",
+              "type": "TextMeshProUGUI",
+              "description": ""
+            }
+          ]
+        },
+        {
+          "signature": "WorldPromptBuilder.Build()",
+          "description": "Construct a fresh, independent WorldGameplayPromptUI under GlobalUIs (DontDestroyOnLoad). Returns the live component (Awake/OnEnable have run; the widget self-hides until Display), or null pre-asset-load (the build needs the game's fonts/materials/sprites loaded) or on any construction failure."
+        }
+      ]
+    },
+    {
+      "id": "worldprompthandle",
+      "title": "WorldPromptHandle",
+      "intro": "Opaque handle to a shown CairnAPI.WorldPrompt. Pass it back to WorldPrompt.Hide."
+    },
+    {
+      "id": "worldpromptstyle",
+      "title": "WorldPromptStyle",
+      "intro": "How a CairnAPI.WorldPrompt floats over its anchor (distance / wall-stick). Maps to the game's WorldGameplayPromptParameters. Defaults are ~1/3 of the game's wall-mount distance (live-tuned to sit near the target rather than far on a wall with a long leader line). Tune any field for your prompt.",
+      "entries": [
+        {
+          "signature": "WorldPromptStyle.Radius",
+          "description": "Anchor radius. Game default 0.25; we use ~0.083."
+        },
+        {
+          "signature": "WorldPromptStyle.WallOffset",
+          "description": "Wall-stick push offset. Game default 0.2; we use ~0.067 (small = stays near the anchor)."
+        },
+        {
+          "signature": "WorldPromptStyle.MaxHeight",
+          "description": "Max height it floats to. Game default 1.3; we use ~0.43."
+        },
+        {
+          "signature": "WorldPromptStyle.HeightOffset",
+          "description": "Height above the anchor. Game default 0.2; we use ~0.067."
+        },
+        {
+          "signature": "WorldPromptStyle.UpsideDown",
+          "description": "Flip vertically."
+        },
+        {
+          "signature": "WorldPromptStyle.FollowsAnchor",
+          "description": "Whether the prompt follows a moving anchor. true → a per-frame position pump; false → zero pump."
+        },
+        {
+          "signature": "WorldPromptStyle.Default",
+          "description": "The close default (~1/3 of the game's wall-mount distance)."
+        }
+      ]
+    }
+  ]
+}
