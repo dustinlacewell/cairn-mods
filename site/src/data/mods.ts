@@ -299,7 +299,7 @@ export const mods: Mod[] = [
     version: "0.1.0",
     description: [
       "A localhost HTTP console that compiles and evals C# against the live game (<code>Roslyn</code>), plus scene inspection and per-instance logging. For writing mods, not playing them.",
-      "Built-in verbs: <code>eval</code>, <code>belay</code>, <code>find</code>, <code>inspect</code>, <code>ropes</code>, <code>renderers</code>, <code>gameplay</code>, <code>survival</code>, <code>edelweiss</code>, <code>input</code>, <code>emit</code>.",
+      "Built-in verbs: <code>eval</code>, <code>belay</code>, <code>find</code>, <code>inspect</code>, <code>ropes</code>, <code>renderers</code>, <code>gameplay</code>, <code>survival</code>, <code>edelweiss</code>, <code>input</code>, <code>emit</code>, <code>help</code>.",
     ],
     features: [
       "HTTP console (ports 14200–14209)",
@@ -315,7 +315,7 @@ export const mods: Mod[] = [
         id: "http",
         title: "HTTP Console",
         intro:
-          "One instance per port, probed from 14200 up. The chosen port is logged at startup. Both GET and POST are supported.",
+          "One instance per port, probed from 14200 up. The chosen port is logged at startup. Both GET and POST are supported. Each instance also mirrors MelonLogger errors and warnings to a per-PID log at <code>MelonLoader/CairnDevTools/&lt;timestamp&gt;_pid&lt;pid&gt;_errors.log</code> — safe with multiple instances open.",
         entries: [
           {
             signature: "GET /cmd?q=<verb> [args]",
@@ -349,7 +349,7 @@ curl "http://127.0.0.1:14200/events?since=0&name=revive-resolved"`,
         id: "eval",
         title: "Eval",
         intro:
-          "Roslyn-compiled C# against the live game. All loaded assemblies are referenced. Import namespaces are pre-added: <code>System</code>, <code>UnityEngine</code>, <code>Il2Cpp</code>, <code>CairnDevTools</code>. End with <code>return &lt;expr&gt;</code> to get a value back.",
+          "Roslyn-compiled C# against the live game. All loaded assemblies are referenced. Import namespaces are pre-added: <code>System</code>, <code>System.Linq</code>, <code>System.Collections.Generic</code>, <code>UnityEngine</code>, <code>Il2Cpp</code>, <code>Il2CppTheGameBakers.Cairn.Netplay</code>, <code>CairnDevTools</code> — so LINQ and co-op types resolve unqualified. End with <code>return &lt;expr&gt;</code> to get a value back.",
         entries: [
           {
             signature: "Log(message)",
@@ -379,7 +379,7 @@ var pawn = (Il2Cpp.ClimbingV2PawnController)Bag["pawn"];`,
         title: "Async Eval",
         group: "eval",
         intro:
-          "Scripts can <code>await Game.WaitFor</code> — the POST blocks and returns only when the script settles. Level-triggered: if the predicate is already true it completes on the next frame, so no edge is ever missed. Timeout faults with a <code>TimeoutException</code> carrying the message.",
+          "Scripts can <code>await Game.WaitFor</code> — the POST blocks and returns only when the script settles. Level-triggered: if the predicate is already true it completes on the next frame, so no edge is ever missed. Timeout faults with a <code>TimeoutException</code> carrying the message. A single blocking POST is capped at ~28 s by the overall script deadline, so drive long sequences across multiple calls rather than one very long await.",
         entries: [
           {
             signature: "Game.WaitFor(predicate, timeoutMs?)",
@@ -523,6 +523,10 @@ curl "http://127.0.0.1:14200/cmd?q=renderers 10"`,
         title: "Other Verbs",
         intro: "Utility commands registered at startup.",
         entries: [
+          {
+            signature: "help",
+            description: "List every registered verb. The default when no <code>q</code> is given.",
+          },
           {
             signature: "gameplay",
             description:
