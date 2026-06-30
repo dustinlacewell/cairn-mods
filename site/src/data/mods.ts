@@ -113,7 +113,7 @@ export const mods: Mod[] = [
     name: "CairnRoutes",
     tagline: "Record, name, draw, and re-climb the line you took.",
     kind: "player",
-    author: "dustin",
+    author: "ldlework",
     version: "0.1.0",
     description: [
       "Records the exact path you climbed, saves it under a name, draws it back into the world as a 3D overlay, and teleports you to its start. Persists across sessions.",
@@ -135,12 +135,20 @@ export const mods: Mod[] = [
     author: "ldlework",
     version: "0.1.0",
     description: [
-      "Unlocks the game's eagle-eye fast-travel in every save type, not just Free Roam. Adds custom bookmarks for warping to arbitrary map positions.",
+      "Unlocks the game's eagle-eye fast-travel in every save — campaign, free-solo, anything, not just Free Roam — and reveals every warp point on the map, including bivouacs you haven't rested at yet.",
+      "In the eagle-eye view, bookmark wherever you're standing as your own warp point, then rename or delete it. Bookmarks persist across saves.",
     ],
     features: [
       "Eagle-eye fast-travel in every save",
-      "Game's own warp list, pins, camera POV",
-      "Custom bookmarks for arbitrary positions",
+      "The game's own warp list, world pins, and camera POV",
+      "Reveals every warp point — even bivouacs you haven't rested at",
+      "Bookmark your current spot as a custom warp point",
+      "Rename and delete bookmarks; they persist across sessions",
+    ],
+    bindings: [
+      { key: "B", does: "bookmark current spot (in eagle-eye view)" },
+      { key: "R", does: "rename selected bookmark" },
+      { key: "Del", does: "delete selected bookmark" },
     ],
     download: TODO_DOWNLOAD,
   },
@@ -167,7 +175,7 @@ export const mods: Mod[] = [
     name: "CairnCarryWeight",
     tagline: "A heavier pack tires you faster.",
     kind: "player",
-    author: "dustin",
+    author: "ldlework",
     version: "1.0.0",
     description: [
       "Makes bag weight matter: the fuller your pack, the more stamina climbing costs. An empty bag plays like vanilla; a full bag costs more — default 2×, tunable up to 5×.",
@@ -205,10 +213,10 @@ export const mods: Mod[] = [
     name: "CairnNoCutscenes",
     tagline: "Auto-skip cutscenes, intros, fades, and radio calls.",
     kind: "player",
-    author: "dustin",
+    author: "ldlework",
     version: "0.1.2",
     description: [
-      "Auto-skips story cutscenes, intro videos, the opening titles, radio calls, and the nightmare sequence. Also removes screen fades for instant transitions, skips the title screen straight to the main menu, and clears a stuck black screen if one ever appears.",
+      "Auto-skips story cutscenes, intro videos, the opening titles, radio calls, and the nightmare sequence. Also removes screen fades for instant transitions and skips the title screen straight to the main menu.",
       "Every option toggles independently on the in-game Mods page.",
     ],
     features: [
@@ -218,7 +226,6 @@ export const mods: Mod[] = [
       "Fast-forward radio calls and robot messages",
       "Skip the opening title sequence on the first wall",
       "Skip the title screen — straight to the main menu",
-      "Auto-clear a stuck black screen if one ever appears",
       "Skip the nightmare/dream sequence",
       "Every option toggleable on the in-game Mods page",
     ],

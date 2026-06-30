@@ -4,6 +4,7 @@
     "CairnModOptions",
     "CairnDevTools",
     "CairnCarryWeight",
-    "CairnNoCutscenes"
+    "CairnNoCutscenes",
+    "CairnFreeRoam"
   ]
 }

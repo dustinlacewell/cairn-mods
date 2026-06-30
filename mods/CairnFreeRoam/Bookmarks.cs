@@ -122,6 +122,29 @@ public class BookmarkStore
         foreach (var b in _bookmarks) Spawn(b);
     }
 
+    /// <summary>Unregister and destroy every live bookmark warp point — call on gameplay teardown so the
+    /// manager never keeps a dangling entry whose GO a scene unload is about to destroy un-unregistered.</summary>
+    public void UnregisterAll()
+    {
+        var manager = MoSingleton<TGB.FreeRoamManager>.Instance;
+        if (manager == null) { _livePoints.Clear(); return; }
+
+        // Unregister mutates orderedWarpPoints (List.Remove), so iterate backwards by index.
+        var list = manager.orderedWarpPoints;
+        if (list != null)
+        {
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                var wp = list[i];
+                if (wp == null || !IsCustom(wp)) continue;
+                manager.Unregister(wp);
+                var go = wp.gameObject;
+                if (go != null) UnityEngine.Object.Destroy(go);
+            }
+        }
+        _livePoints.Clear();
+    }
+
     private void Spawn(BookmarkData data)
     {
         var manager = MoSingleton<TGB.FreeRoamManager>.Instance;

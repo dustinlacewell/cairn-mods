@@ -58,12 +58,14 @@ public class Core : MelonMod
 
     public override void OnUpdate()
     {
-        // Bookmarks are FreeRoamWarpPoints that a scene unload destroys; re-register them once the pawn is in
-        // and a FreeRoamManager exists, and drop the flag when gameplay tears down so we re-register next load.
+        // Bookmarks are FreeRoamWarpPoints; register them once the pawn is in and a FreeRoamManager exists, and
+        // on gameplay teardown explicitly unregister + destroy them so the manager never keeps a dangling entry
+        // (the GOs are inactive, so their OnDestroy never self-cleans when a scene unload kills them). We then
+        // re-register fresh on the next gameplay load.
         bool inGame = Il2Cpp.PawnManager.MCSpawned
                       && Il2Cpp.MoSingleton<TGB.FreeRoamManager>.Instance != null;
         if (inGame && !_registered) { _store.RegisterAll(); _registered = true; }
-        else if (!inGame && _registered) { _registered = false; _bookmarks.Teardown(); }
+        else if (!inGame && _registered) { _registered = false; _store.UnregisterAll(); _bookmarks.Teardown(); }
 
         if (inGame) _bookmarks.Tick(AddBookmarkKey.Value, DeleteBookmarkKey.Value, RenameBookmarkKey.Value);
     }
