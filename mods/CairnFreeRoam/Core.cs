@@ -1,7 +1,10 @@
 using HarmonyLib;
+using Il2Cpp;
 using MelonLoader;
 using UnityEngine.InputSystem;
 using TGB = Il2CppTheGameBakers.Cairn;
+using CairnUI = Il2CppTheGameBakers.Cairn.UI;
+using Loc = Il2CppTGBTools.Localization;
 
 [assembly: MelonInfo(typeof(CairnFreeRoam.Core), "CairnFreeRoam", "0.1.0", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
@@ -33,8 +36,10 @@ public class Core : MelonMod
     internal static MelonPreferences_Entry<Key> DeleteBookmarkKey;
     internal static MelonPreferences_Entry<Key> RenameBookmarkKey;
 
+    // Reachable from the static eagle-eye Harmony patches below (they hand it the captured refs / row binds).
+    internal static BookmarkController Bookmarks;
+
     private BookmarkStore _store;
-    private BookmarkController _bookmarks;
     private bool _registered;
 
     public override void OnInitializeMelon()
@@ -52,7 +57,7 @@ public class Core : MelonMod
             description: "In the eagle-eye view, rename the selected custom bookmark (Enter confirms, Esc cancels).");
 
         _store = new BookmarkStore();
-        _bookmarks = new BookmarkController(_store);
+        Bookmarks = new BookmarkController(_store, AddBookmarkKey, DeleteBookmarkKey, RenameBookmarkKey);
         LoggerInstance.Msg($"CairnFreeRoam loaded — eagle-eye unlocked, {_store.Bookmarks.Count} bookmark(s).");
     }
 
@@ -65,9 +70,11 @@ public class Core : MelonMod
         bool inGame = Il2Cpp.PawnManager.MCSpawned
                       && Il2Cpp.MoSingleton<TGB.FreeRoamManager>.Instance != null;
         if (inGame && !_registered) { _store.RegisterAll(); _registered = true; }
-        else if (!inGame && _registered) { _registered = false; _store.UnregisterAll(); _bookmarks.Teardown(); }
+        else if (!inGame && _registered) { _registered = false; _store.UnregisterAll(); Bookmarks.Teardown(); }
 
-        if (inGame) _bookmarks.Tick(AddBookmarkKey.Value, DeleteBookmarkKey.Value, RenameBookmarkKey.Value);
+        // The view-open/close, ref-capture, and label-stamp are all Harmony-driven (no per-frame scene work).
+        // The only per-frame cost is this gated input read, and it early-returns the instant the view is closed.
+        if (Bookmarks.ViewOpen) Bookmarks.TickInput();
     }
 }
 
@@ -94,5 +101,49 @@ internal static class RevealPinsPatch
     {
         if (Core.RevealAllPins != null && Core.RevealAllPins.Value)
             __result = true;
+    }
+}
+
+// ── Event-driven bookmark UI (replaces the old per-frame FindObjectOfType scans) ────────────────────────────
+//
+// The warp list opens/closes through the UIManager content lifecycle — OnContentActivated / OnContentDeactivated
+// on FreeRoamEagleEyeWarpPointListUI (the RB "Choose a destination" path runs through these, NOT through
+// EagleEyeUI.EnterFreeRoamDisplayWarps — trace-proven). The postfix hands us the list (__instance); the
+// controller resolves the EagleEyeUI once on open for the prompt line. While closed it holds no refs and does
+// zero per-frame work.
+
+// View opened: the warp list's content was activated. __instance is the list. Capture it and show the prompts.
+[HarmonyPatch(typeof(CairnUI.FreeRoamEagleEyeWarpPointListUI), nameof(CairnUI.FreeRoamEagleEyeWarpPointListUI.OnContentActivated))]
+internal static class ListContentActivatedPatch
+{
+    private static void Postfix(CairnUI.FreeRoamEagleEyeWarpPointListUI __instance)
+    {
+        if (Core.Enabled != null && Core.Enabled.Value)
+            Core.Bookmarks?.OnViewOpened(__instance);
+    }
+}
+
+// View closed: the warp list's content was deactivated. Dispose the prompts, restore input, drop refs.
+[HarmonyPatch(typeof(CairnUI.FreeRoamEagleEyeWarpPointListUI), nameof(CairnUI.FreeRoamEagleEyeWarpPointListUI.OnContentDeactivated))]
+internal static class ListContentDeactivatedPatch
+{
+    private static void Postfix()
+    {
+        Core.Bookmarks?.OnViewClosed();
+    }
+}
+
+// Own the STRING at its source. The eagle-eye row name cell is a LocalizedText that is (re)written only by
+// LocalizedText.Refresh() → LocalizationManager.Get(locKey) → set_text, with NO cached string — every refresh
+// pulls fresh via Get. Each bookmark holds a unique custom loc id (SetLocKey), so prefixing Get to return our
+// name for our ids makes the game's own pipeline render bookmark names everywhere, durably — surviving every
+// navigate/loc-event Refresh. Get(string) is a separate overload; the arg-type array selects Get(LocKeyStringId).
+[HarmonyPatch(typeof(Loc.LocalizationManager), nameof(Loc.LocalizationManager.Get), new[] { typeof(Loc.LocKeyStringId) })]
+internal static class LocNamePatch
+{
+    private static bool Prefix(Loc.LocKeyStringId key, ref string __result)
+    {
+        if (BookmarkStore.TryGetLocName(key.Value, out var name)) { __result = name; return false; }
+        return true;
     }
 }

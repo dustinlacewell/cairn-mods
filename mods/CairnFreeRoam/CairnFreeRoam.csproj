@@ -67,6 +67,14 @@
       <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.Cairn.Utilities.SingletonBase.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.Localization.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Localization.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.Common.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Common.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <Target Name="InstallToGame" AfterTargets="Build" Condition="'$(NoInstall)' != '1'">

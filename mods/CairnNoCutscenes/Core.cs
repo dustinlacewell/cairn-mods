@@ -5,7 +5,7 @@ using Il2CppTheGameBakers.Cairn.UI;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(CairnNoCutscenes.Core), "CairnNoCutscenes", "0.1.2", "dustin")]
+[assembly: MelonInfo(typeof(CairnNoCutscenes.Core), "CairnNoCutscenes", "0.1.2", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
 
 namespace CairnNoCutscenes;
@@ -24,7 +24,6 @@ public class Core : MelonMod
     internal static MelonPreferences_Entry<bool> SkipRadioCalls;
     internal static MelonPreferences_Entry<bool> SkipOpeningTitles;
     internal static MelonPreferences_Entry<bool> SkipTitleScreen;
-    internal static MelonPreferences_Entry<bool> FixStuckBlackScreen;
     internal static MelonPreferences_Entry<bool> SkipDreamSequence;
 
     // True while a DialogStoryEvent (radio call / robot message) is playing its Ink story.
@@ -40,9 +39,6 @@ public class Core : MelonMod
     private static float UnconsumedSkipGrace => RemoveFades.Value ? 1f : 4f;
     private Cutscene pendingSkip;
     private float pendingSkipSince;
-
-    private float blackScreenCheckAt;
-    private float blackScreenStuckSince = -1f;
 
     private MainMenu mainMenu;
     private MainMenu.Step? titleStepLogged;
@@ -62,8 +58,6 @@ public class Core : MelonMod
             description: "Skip the opening title sequence on the first wall.");
         SkipTitleScreen = cat.CreateEntry("SkipTitleScreen", true,
             description: "Skip the title screen and go straight to the main menu.");
-        FixStuckBlackScreen = cat.CreateEntry("FixStuckBlackScreen", true,
-            description: "Automatically clear a stuck black screen if one ever appears.");
         SkipDreamSequence = cat.CreateEntry("SkipDreamSequence", true,
             description: "Skip the nightmare/dream sequence.");
 
@@ -92,9 +86,6 @@ public class Core : MelonMod
             CairnModOptions.ModOption.Toggle("Skip title screen", SkipTitleScreen,
                 tooltip: "Skip the title screen and go straight to the main menu."),
 
-            CairnModOptions.ModOption.Toggle("Fix stuck black screen", FixStuckBlackScreen,
-                tooltip: "Automatically clear a stuck black screen if one ever appears."),
-
             CairnModOptions.ModOption.Toggle("Skip nightmare/dream sequence", SkipDreamSequence,
                 tooltip: "Skip the nightmare/dream sequence."),
         });
@@ -106,57 +97,7 @@ public class Core : MelonMod
         if (SkipVideos.Value) SkipVideoIfPlaying();
         if (SkipTitleScreen.Value) SkipTitleScreenIfNeeded();
         if (FastForwardDialog) ClearDialogFastForwardWhenDone();
-        if (FixStuckBlackScreen.Value) HideStuckBlackScreenIfNeeded();
         if (SkipDreamSequence.Value) SkipDreamIfNeeded();
-    }
-
-    // On load the scene manager shows the fullscreen BlackScreen overlay and the FIRST
-    // cutscene is responsible for hiding it (firstCutsceneShouldHandleBlackScreen) —
-    // auto-skipping that cutscene can orphan the overlay: the world runs fine behind an
-    // alpha-1 black quad. Watchdog: fully-shown BlackScreen with no cutscene/video
-    // playing and no loading/menu scene up, stable for 5 s -> hide it.
-    private void HideStuckBlackScreenIfNeeded()
-    {
-        if (Time.unscaledTime < blackScreenCheckAt)
-            return;
-        blackScreenCheckAt = Time.unscaledTime + 1f;
-
-        var cutscene = Cutscene.CurrentCutscene;
-        if ((cutscene != null && cutscene.IsPlaying) || MoviePlayerManager.IsPlaying || InLoadingOrMenu())
-        {
-            blackScreenStuckSince = -1f;
-            return;
-        }
-
-        bool fullyBlack = false;
-        var overlays = Object.FindObjectsOfType<BlackScreen>();
-        foreach (var overlay in overlays)
-        {
-            if (overlay.GetCurrAlpha() > 0.99f && overlay.GetTargetAlpha() > 0.99f)
-            {
-                fullyBlack = true;
-                break;
-            }
-        }
-        if (!fullyBlack)
-        {
-            blackScreenStuckSince = -1f;
-            return;
-        }
-
-        if (blackScreenStuckSince < 0f)
-        {
-            blackScreenStuckSince = Time.unscaledTime;
-            return;
-        }
-        if (Time.unscaledTime - blackScreenStuckSince < 5f)
-            return;
-
-        blackScreenStuckSince = -1f;
-        MelonLogger.Msg("Hiding orphaned BlackScreen overlay (skipped cutscene never faded back in)");
-        foreach (var overlay in overlays)
-            if (overlay.GetCurrAlpha() > 0.99f)
-                overlay.Hide(BlackScreen.FadeType.Simple, 0.25f, "CairnNoCutscenes", true);
     }
 
     // IL2CPP inlined the call sites that matter here (EnableCameraTravelling's
@@ -208,17 +149,6 @@ public class Core : MelonMod
         for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
             if (UnityEngine.SceneManagement.SceneManager.GetSceneAt(i).name.Contains("MainMenu"))
                 return true;
-        return false;
-    }
-
-    private static bool InLoadingOrMenu()
-    {
-        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
-        {
-            string name = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i).name;
-            if (name.Contains("Loading") || name.Contains("MainMenu"))
-                return true;
-        }
         return false;
     }
 

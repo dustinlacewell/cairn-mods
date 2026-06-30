@@ -1,3 +1,3 @@
-## CairnNoCutscenes v0.1.2
+## CairnNoCutscenes v0.1.3
 
-- Added: skip the nightmare/dream sequence.
+- Removed the stuck-black-screen watchdog — its per-second scene scan caused a periodic rendering hiccup.

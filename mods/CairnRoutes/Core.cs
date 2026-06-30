@@ -4,7 +4,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[assembly: MelonInfo(typeof(CairnRoutes.Core), "CairnRoutes", "0.1.0", "dustin")]
+[assembly: MelonInfo(typeof(CairnRoutes.Core), "CairnRoutes", "0.1.0", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
 [assembly: MelonAdditionalDependencies("CairnAPI")]
 

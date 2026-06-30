@@ -214,7 +214,7 @@ export const mods: Mod[] = [
     tagline: "Auto-skip cutscenes, intros, fades, and radio calls.",
     kind: "player",
     author: "ldlework",
-    version: "0.1.2",
+    version: "0.1.3",
     description: [
       "Auto-skips story cutscenes, intro videos, the opening titles, radio calls, and the nightmare sequence. Also removes screen fades for instant transitions and skips the title screen straight to the main menu.",
       "Every option toggles independently on the in-game Mods page.",

@@ -57,7 +57,7 @@ internal static class GhostRopeGesture
     // name as the {0} parameter. The loc system is key-only (no runtime literal-string registration —
     // LocalizationManager.Get is key→table; ParametrizedLocKey has no raw-string field), so we REUSE the
     // game's keys rather than author custom text or our own prompt UI. Wording the player sees: "Attach rope
-    // to Dustin" (request/accept) / "Detach rope from Dustin" (unrope) — localized in all 11 shipped languages
+    // to John" (request/accept) / "Detach rope from John" (unrope) — localized in all 11 shipped languages
     // for free. ("accept" has no distinct shipped key; "Attach rope to {name}" is semantically fine on the
     // accepter side too.) Verdict + evidence: re/systems/coop/coop-rope-request-design.md §"prompt labels".
     private static Il2CppSystem.Func<Il2Cpp.ParametrizedLocKey> _label;

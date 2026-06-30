@@ -2,7 +2,7 @@ using System.Globalization;
 using MelonLoader;
 using CairnAPI;
 
-[assembly: MelonInfo(typeof(CairnCarryWeight.Core), "CairnCarryWeight", "0.1.0", "dustin")]
+[assembly: MelonInfo(typeof(CairnCarryWeight.Core), "CairnCarryWeight", "0.1.0", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
 
 namespace CairnCarryWeight;

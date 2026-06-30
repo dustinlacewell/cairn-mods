@@ -231,6 +231,20 @@ categories:
             deny:
               - SendMessages
 
+  - name: "FREE ROAM"
+    channels:
+      - name: "freeroam-chat"
+        type: text
+        topic: "Discussion about the Cairn Free Roam mod — usage, questions, feedback"
+
+      - name: "freeroam-updates"
+        type: announcement
+        topic: "Cairn Free Roam releases, changelogs, and breaking-change notices"
+        permissions:
+          - role: "@everyone"
+            deny:
+              - SendMessages
+
   - name: "STAFF"
     permissions:
       - role: "@everyone"

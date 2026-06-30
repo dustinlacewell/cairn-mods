@@ -57,7 +57,7 @@ internal sealed class PartyHud
     private sealed class Row
     {
         public GameObject Go;
-        public Text Name;   // "↳ Dustin" / "Dustin (you)"
+        public Text Name;   // "↳ John" / "John (you)"
         public Text State;  // "on wall" / "falling" / "dead" / "idle"
     }
 
