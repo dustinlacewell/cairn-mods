@@ -1,3 +1,3 @@
-## CairnAPI v0.3.0
+## CairnAPI v0.4.0
 
-- Add the CrossMenu API: build custom quick-action wheel menus (the LT / d-pad cross-menu) with your own actions, icons, and button chords.
+- Added a Localization service: register custom display strings and have the game render them anywhere it resolves a localization key. Language-aware with an English fallback.
