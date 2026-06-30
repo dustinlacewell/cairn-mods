@@ -330,3 +330,38 @@ internal static class CutsceneStoryEventPatch
         __instance.fadeFromBlackToGameplayDuration = 0f;
     }
 }
+
+// Hide an orphaned black screen at the exact moment a cutscene ends — no scanning.
+//
+// CutsceneStoryEvent.OnCutsceneStop is the game's own end-of-cutscene handler and it
+// owns the black-screen hide, but only on the path where the final fade has a non-zero
+// duration: it then Shows+Hides the overlay. On a skip with that duration zeroed it
+// instead only registers a Hide-Done callback and never calls Hide() — and its lone
+// rescue branch fires only when the completion action is DoNothing and no fade is mid-
+// flight. RemoveFades zeroes that very duration (CutsceneStoryEventPatch), so a skipped
+// cutscene whose completion action is GoToKami/RecapPath/RollEndCredits leaves the
+// overlay fully black with the world running behind it.
+//
+// OnCutsceneStop runs for both a natural end and a skip (it is the Cutscene.OnStop
+// callback Cutscene.Skip() fires), so a postfix here is the one place that always sees
+// a cutscene finish. We reach the single shared overlay directly via GlobalUIs — the
+// game's own singleton, the same one OnCutsceneStop dereferences — instead of scanning
+// the scene. We only hide when the screen is left settled-open (a fade already running
+// will resolve on its own; hiding mid-fade would be rejected by BlackScreen's
+// re-entrancy guard anyway), mirroring the game's own !IsInProgress rescue condition.
+[HarmonyPatch(typeof(CutsceneStoryEvent), nameof(CutsceneStoryEvent.OnCutsceneStop))]
+internal static class CutsceneStoryEventStopPatch
+{
+    private static void Postfix()
+    {
+        if (!Core.SkipCutscenes.Value && !Core.RemoveFades.Value)
+            return;
+
+        var blackScreen = MoSingleton<GlobalUIs>.Instance?.blackScreen;
+        if (blackScreen == null || blackScreen.IsInProgress() || !blackScreen.IsOpen)
+            return;
+
+        MelonLogger.Msg("Hiding orphaned black screen after skipped cutscene");
+        blackScreen.Hide(BlackScreen.FadeType.Simple, 0.25f, "CairnNoCutscenes", true);
+    }
+}

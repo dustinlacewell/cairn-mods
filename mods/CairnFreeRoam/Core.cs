@@ -46,8 +46,8 @@ public class Core : MelonMod
         var cat = MelonPreferences.CreateCategory("CairnFreeRoam");
         Enabled = cat.CreateEntry("Enabled", true,
             description: "Unlock the eagle-eye fast-travel teleport in any save.");
-        RevealAllPins = cat.CreateEntry("RevealAllPins", true,
-            description: "Treat every warp point as discovered (reveals bivouacs you haven't rested at yet).");
+        RevealAllPins = cat.CreateEntry("RevealAllPins", false,
+            description: "Reveal every destination, including bivouacs you haven't discovered yet. Off by default so it doesn't spoil places you haven't found.");
         AddBookmarkKey = cat.CreateEntry("AddBookmarkKey", Key.B,
             description: "In the eagle-eye view, bookmark the current position as a new warp point.");
         DeleteBookmarkKey = cat.CreateEntry("DeleteBookmarkKey", Key.Delete,
@@ -57,7 +57,21 @@ public class Core : MelonMod
 
         _store = new BookmarkStore();
         Bookmarks = new BookmarkController(_store, AddBookmarkKey, DeleteBookmarkKey, RenameBookmarkKey);
+        RegisterModOptions();
         LoggerInstance.Msg($"CairnFreeRoam loaded — eagle-eye unlocked, {_store.Bookmarks.Count} bookmark(s).");
+    }
+
+    // Surface the two behaviour toggles in the in-game Mods settings page (both bound live to their prefs).
+    private static void RegisterModOptions()
+    {
+        CairnModOptions.ModOptions.Register("CairnFreeRoam", new[]
+        {
+            CairnModOptions.ModOption.Toggle("Enable fast-travel", Enabled,
+                tooltip: "Unlock the eagle-eye fast-travel teleport in any save."),
+
+            CairnModOptions.ModOption.Toggle("Reveal all destinations", RevealAllPins,
+                tooltip: "Show every destination, including bivouacs you haven't discovered yet. Off keeps unfound places hidden so they aren't spoiled."),
+        });
     }
 
     public override void OnUpdate()
