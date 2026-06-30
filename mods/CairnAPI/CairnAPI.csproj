@@ -109,6 +109,10 @@
       <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Localization.Runtime.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Il2CppTheGameBakers.TGBTools.Common.Runtime">
+      <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.Common.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Il2CppTheGameBakers.TGBTools.UI.Runtime">
       <HintPath>$(GameDir)\MelonLoader\Il2CppAssemblies\Il2CppTheGameBakers.TGBTools.UI.Runtime.dll</HintPath>
       <Private>false</Private>

@@ -17,6 +17,7 @@ public class Core : MelonMod
         CairnMenu.Install(harmony);      // injects rail GOs on SettingsMenu.OnOpened
         SettingsPages.Install(harmony);  // wires page visuals — must run after the GOs exist
         CrossMenu.Install(harmony);      // LT+chord radial menus; pumped each frame in OnUpdate
+        Localization.Install(harmony);   // owns LocalizationManager.Get for mod-registered loc keys
         LoggerInstance.Msg("CairnAPI loaded.");
     }
 

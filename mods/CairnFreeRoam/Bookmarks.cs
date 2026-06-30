@@ -9,6 +9,7 @@ using MelonLoader.Utils;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TGB = Il2CppTheGameBakers.Cairn;
+using LocKey = Il2CppTGBTools.Localization.LocKeyStringId;
 
 namespace CairnFreeRoam;
 
@@ -37,53 +38,29 @@ public class BookmarkStore
     private const string GoPrefix = "CairnFreeRoam.Bookmark";
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    // Custom loc ids live in a band the game never uses: real LocKeyStringIdEnum values are FNV hashes whose
-    // most-negative is ~ -2145991127, so starting at int.MinValue and counting up is collision-free for the
-    // first ~1.5M ids — far more than we allocate. Ids are session/registration-scoped: RegisterAll re-spawns
-    // every point and re-allocates from the base, so they need only be stable within one registration.
-    private const int LocIdBase = int.MinValue;
-
     private readonly string _file;
     private readonly List<BookmarkData> _bookmarks = new();
     private readonly HashSet<IntPtr> _livePoints = new();
 
-    // id → display name, read by the LocalizationManager.Get prefix (via the static accessor). The game's own
-    // refresh pipeline pulls names from here, so they survive every navigate/loc-event Refresh.
-    private readonly Dictionary<int, string> _locNames = new();
-    // live warp point → its loc id, so rename/delete can target a bookmark's id from its FreeRoamWarpPoint.
-    private readonly Dictionary<IntPtr, int> _locIds = new();
-    private int _nextLocId = LocIdBase;
-
-    /// <summary>The store the Get prefix reads. Set in the ctor — there is one store for the mod's lifetime.</summary>
-    public static BookmarkStore Active { get; private set; }
+    // live warp point → the CairnAPI loc key that renders its name. CairnAPI.Localization owns the id band,
+    // the registry, and the LocalizationManager.Get prefix now; we just map each point to its key so
+    // rename/delete can target it. The key is written into the point's locKey field (SetLocKey) so the game's
+    // own refresh pipeline resolves the name through CairnAPI's hook everywhere, durably.
+    private readonly Dictionary<IntPtr, LocKey> _locIds = new();
 
     public BookmarkStore()
     {
         var dir = Path.Combine(MelonEnvironment.UserDataDirectory, "CairnFreeRoam");
         Directory.CreateDirectory(dir);
         _file = Path.Combine(dir, "bookmarks.json");
-        Active = this;
         Load();
     }
 
     public IReadOnlyList<BookmarkData> Bookmarks => _bookmarks;
 
-    /// <summary>The custom display name for a loc id, if it is one of ours — the LocalizationManager.Get prefix
-    /// reads this so the game's text pipeline renders bookmark names everywhere, durably.</summary>
-    public static bool TryGetLocName(int id, out string name)
-    {
-        var store = Active;
-        if (store != null && store._locNames.TryGetValue(id, out name)) return true;
-        name = null;
-        return false;
-    }
-
-    /// <summary>Update a bookmark's display name in place (rename/live-edit). The next Get refresh shows it.</summary>
-    public void SetLocName(int id, string name) => _locNames[id] = name;
-
-    /// <summary>The loc id assigned to a live warp point, or 0 if it is not one of ours.</summary>
-    public int LocIdOf(TGB.FreeRoamWarpPoint wp)
-        => wp != null && _locIds.TryGetValue(wp.Pointer, out var id) ? id : 0;
+    /// <summary>The CairnAPI loc key for a live warp point, used to target rename/delete — default if not ours.</summary>
+    public LocKey LocKeyOf(TGB.FreeRoamWarpPoint wp)
+        => wp != null && _locIds.TryGetValue(wp.Pointer, out var key) ? key : default;
 
     /// <summary>True if this warp point is one of ours (membership test for the delete/rename gate).</summary>
     public bool IsCustom(TGB.FreeRoamWarpPoint wp)
@@ -134,7 +111,11 @@ public class BookmarkStore
 
         var manager = MoSingleton<TGB.FreeRoamManager>.Instance;
         if (manager != null) manager.Unregister(wp);
-        if (_locIds.TryGetValue(wp.Pointer, out var locId)) { _locNames.Remove(locId); _locIds.Remove(wp.Pointer); }
+        if (_locIds.TryGetValue(wp.Pointer, out var locKey))
+        {
+            CairnAPI.Localization.Unregister(locKey);
+            _locIds.Remove(wp.Pointer);
+        }
         _livePoints.Remove(wp.Pointer);
         var go = wp.gameObject;
         if (go != null) UnityEngine.Object.Destroy(go);
@@ -150,14 +131,17 @@ public class BookmarkStore
         return true;
     }
 
-    /// <summary>(Re)create live warp points for every persisted bookmark — call on each gameplay load. Loc ids
-    /// are reset and re-allocated fresh here; they need only be stable within one registration.</summary>
+    /// <summary>(Re)create live warp points for every persisted bookmark — call on each gameplay load. Each
+    /// spawn registers a fresh CairnAPI loc key for its name; keys accumulate in CairnAPI across cycles (cheap),
+    /// we only reset our point→key map here.</summary>
     public void RegisterAll()
     {
+        // Drop any loc keys from a prior registration BEFORE clearing the map, so CairnAPI's registry never
+        // orphans entries (the MCSpawned-edge guard normally pairs this with UnregisterAll, but make RegisterAll
+        // self-correct regardless of call order — orphaned keys would otherwise leak in CairnAPI.Localization).
+        DropLocKeys();
         _livePoints.Clear();
-        _locNames.Clear();
         _locIds.Clear();
-        _nextLocId = LocIdBase;
         foreach (var b in _bookmarks) Spawn(b);
     }
 
@@ -166,7 +150,7 @@ public class BookmarkStore
     public void UnregisterAll()
     {
         var manager = MoSingleton<TGB.FreeRoamManager>.Instance;
-        if (manager == null) { _livePoints.Clear(); _locNames.Clear(); _locIds.Clear(); return; }
+        if (manager == null) { DropLocKeys(); _livePoints.Clear(); _locIds.Clear(); return; }
 
         // Unregister mutates orderedWarpPoints (List.Remove), so iterate backwards by index.
         var list = manager.orderedWarpPoints;
@@ -181,9 +165,16 @@ public class BookmarkStore
                 if (go != null) UnityEngine.Object.Destroy(go);
             }
         }
+        DropLocKeys();
         _livePoints.Clear();
-        _locNames.Clear();
         _locIds.Clear();
+    }
+
+    /// <summary>Release every CairnAPI loc key we hold (teardown drops the live points, so their names are no
+    /// longer needed). RegisterAll re-registers fresh keys on the next gameplay load.</summary>
+    private void DropLocKeys()
+    {
+        foreach (var key in _locIds.Values) CairnAPI.Localization.Unregister(key);
     }
 
     private void Spawn(BookmarkData data)
@@ -208,13 +199,13 @@ public class BookmarkStore
         SetWarpMode(wp, (int)PawnControllerSwitcher.Mode.Walking);
         wp.linkedToBivouac = false; // → IsKnown() true → selectable/warpable, never greyed
 
-        // Give the point a UNIQUE custom loc id and map id→label. The row name cell is a LocalizedText fed by
-        // wp.LocKey through LocalizationManager.Get; our Get prefix returns _locNames[id] for our ids, so the
-        // game's own refresh pipeline renders this bookmark's name everywhere and never reverts it.
-        int locId = _nextLocId++;
-        SetLocKey(wp, locId);
-        _locNames[locId] = data.Label;
-        _locIds[wp.Pointer] = locId;
+        // Register the bookmark's name with CairnAPI.Localization and write the returned loc key into the
+        // point's locKey field. The row name cell is a LocalizedText fed by wp.LocKey through
+        // LocalizationManager.Get; CairnAPI's Get hook returns our name for that key, so the game's own refresh
+        // pipeline renders this bookmark's name everywhere and never reverts it.
+        var key = CairnAPI.Localization.Register(data.Label);
+        SetLocKey(wp, key.Value);
+        _locIds[wp.Pointer] = key;
 
         manager.Register(wp);
         _livePoints.Add(wp.Pointer);

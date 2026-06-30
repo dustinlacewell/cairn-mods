@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using TGB = Il2CppTheGameBakers.Cairn;
 using CairnUI = Il2CppTheGameBakers.Cairn.UI;
+using LocKey = Il2CppTGBTools.Localization.LocKeyStringId;
 
 namespace CairnFreeRoam;
 
@@ -17,9 +18,9 @@ namespace CairnFreeRoam;
 ///
 /// Entirely event-driven: the eagle-eye refs are captured from Harmony postfixes on the warp list's
 /// OnContentActivated / OnContentDeactivated (open/close). Bookmark names are owned at the source — each point
-/// holds a unique custom loc id and the LocalizationManager.Get prefix (Core.LocNamePatch) returns the stored
-/// name, so the game's own refresh pipeline renders names everywhere; this controller only mutates the name in
-/// the store and rebuilds the list to re-resolve it.
+/// holds a CairnAPI loc key and CairnAPI.Localization owns the LocalizationManager.Get hook that returns the
+/// stored name, so the game's own refresh pipeline renders names everywhere; this controller only mutates the
+/// name via Localization.Update and rebuilds the list to re-resolve it.
 /// When the view is closed the controller holds no refs and does NO per-frame work — TickInput early-returns.
 /// While open, TickInput reads the 3 cross-device InputActions and drives the operations. Each action is a
 /// CROSS-DEVICE InputAction (keyboard key + gamepad button) built via CairnAPI Glyph.Custom — the SAME action
@@ -43,7 +44,7 @@ public sealed class BookmarkController
 
     private TGB.FreeRoamWarpPoint _renaming; // the point being renamed (held across the edit)
     private BookmarkData _renameData;
-    private int _renameLocId;                // its loc id — we drive the live edit through _store.SetLocName(this)
+    private LocKey _renameLocKey;            // its CairnAPI loc key — live edits go through Localization.Update
     private string _renameOriginal;          // original label, restored on cancel
 
     // Key bindings are read from prefs when the actions are first built (on first view open).
@@ -160,7 +161,7 @@ public sealed class BookmarkController
         if (data == null) return;
         _renaming = wp;
         _renameData = data;
-        _renameLocId = _store.LocIdOf(wp);
+        _renameLocKey = _store.LocKeyOf(wp);
         _renameOriginal = data.Label;
         _rename.Begin("");        // start from an empty field, as requested
         _prompts.Refresh(_eye, true, deletable: false, renamable: false); // hide action prompts during edit
@@ -175,21 +176,22 @@ public sealed class BookmarkController
         SetGameInput(false);       // keep game input muted for the whole edit (idempotent)
         _rename.Update();
 
-        // Drive the live edit through the loc dict, not the TMP: set this bookmark's name to the buffer + caret,
-        // then re-resolve ONLY the editing row (RefreshRow) — NOT a full CreateLocations, which would re-seed the
-        // cursor + world pins every keystroke and make the selected mountain pin loop through all points.
-        _store.SetLocName(_renameLocId, _rename.Buffer + "▏"); // ▏ caret
+        // Drive the live edit through CairnAPI.Localization, not the TMP: set this bookmark's name to the buffer
+        // + caret, then re-resolve ONLY the editing row (RefreshRow) — NOT a full CreateLocations, which would
+        // re-seed the cursor + world pins every keystroke and make the selected mountain pin loop through all
+        // points.
+        Localization.Update(_renameLocKey, _rename.Buffer + "▏"); // ▏ caret
         RefreshRow(_renaming);
 
         if (_rename.Committed)
         {
-            _store.SetLocName(_renameLocId, _rename.Buffer); // drop the caret
+            Localization.Update(_renameLocKey, _rename.Buffer); // drop the caret
             _store.Rename(_renameData, _rename.Buffer);      // persist to bookmarks.json
             EndRename();
         }
         else if (_rename.Cancelled)
         {
-            _store.SetLocName(_renameLocId, _renameOriginal); // restore the pre-edit name
+            Localization.Update(_renameLocKey, _renameOriginal); // restore the pre-edit name
             EndRename();
         }
     }

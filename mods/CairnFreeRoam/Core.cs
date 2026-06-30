@@ -4,7 +4,6 @@ using MelonLoader;
 using UnityEngine.InputSystem;
 using TGB = Il2CppTheGameBakers.Cairn;
 using CairnUI = Il2CppTheGameBakers.Cairn.UI;
-using Loc = Il2CppTGBTools.Localization;
 
 [assembly: MelonInfo(typeof(CairnFreeRoam.Core), "CairnFreeRoam", "0.1.0", "ldlework")]
 [assembly: MelonGame("TheGameBakers", "Cairn")]
@@ -130,20 +129,5 @@ internal static class ListContentDeactivatedPatch
     private static void Postfix()
     {
         Core.Bookmarks?.OnViewClosed();
-    }
-}
-
-// Own the STRING at its source. The eagle-eye row name cell is a LocalizedText that is (re)written only by
-// LocalizedText.Refresh() → LocalizationManager.Get(locKey) → set_text, with NO cached string — every refresh
-// pulls fresh via Get. Each bookmark holds a unique custom loc id (SetLocKey), so prefixing Get to return our
-// name for our ids makes the game's own pipeline render bookmark names everywhere, durably — surviving every
-// navigate/loc-event Refresh. Get(string) is a separate overload; the arg-type array selects Get(LocKeyStringId).
-[HarmonyPatch(typeof(Loc.LocalizationManager), nameof(Loc.LocalizationManager.Get), new[] { typeof(Loc.LocKeyStringId) })]
-internal static class LocNamePatch
-{
-    private static bool Prefix(Loc.LocKeyStringId key, ref string __result)
-    {
-        if (BookmarkStore.TryGetLocName(key.Value, out var name)) { __result = name; return false; }
-        return true;
     }
 }
